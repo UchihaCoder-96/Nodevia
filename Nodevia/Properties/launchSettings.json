@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Nodevia": {
+      "commandName": "Project"
+    },
+    "Run": {
+      "commandName": "Executable",
+      "executablePath": "D:\\VS Projects\\Nodevia\\Nodevia.Demo\\bin\\Debug\\net10.0-windows\\Nodevia.Demo.exe",
+      "workingDirectory": "D:\\VS Projects\\Nodevia\\Nodevia.Demo\\bin\\Debug\\net10.0-windows"
+    }
+  }
+}
