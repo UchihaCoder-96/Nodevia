@@ -35,8 +35,6 @@ namespace Nodevia.Demo
                     Title = "Multiply",
                     Position = new Point(450, 250)
                 });
-
-            MessageBox.Show($"Nodes: {NodeCanvas.Nodes.Count}");
         }
     }
 }

@@ -61,20 +61,16 @@
                 <ControlTemplate TargetType="{x:Type local:NodeCanvas}">
 
                     <Border
-                        Background="{TemplateBinding Background}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}">
+                Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                ClipToBounds="True">
 
-                        <ScrollViewer
-                            Focusable="False"
-                            HorizontalScrollBarVisibility="Disabled"
-                            VerticalScrollBarVisibility="Disabled">
-
-                            <!-- ItemsPresenter displays ItemsControl's generated items -->
-
-                            <ItemsPresenter/>
-
-                        </ScrollViewer>
+                        <ItemsPresenter x:Name="PART_ItemsPresenter">
+                            <ItemsPresenter.RenderTransform>
+                                <TranslateTransform x:Name="PART_PanTransform"/>
+                            </ItemsPresenter.RenderTransform>
+                        </ItemsPresenter>
 
                     </Border>
 
@@ -83,16 +79,13 @@
             </Setter.Value>
         </Setter>
 
-
-        <!-- Items Panel: each nodeControl is placed inside this canvas -->
-
         <Setter Property="ItemsPanel">
             <Setter.Value>
 
                 <ItemsPanelTemplate>
-
-                    <Canvas/>
-
+                    <Canvas
+                        Width="{Binding WorldWidth, RelativeSource={RelativeSource AncestorType={x:Type local:NodeCanvas}}}"
+                        Height="{Binding WorldHeight, RelativeSource={RelativeSource AncestorType={x:Type local:NodeCanvas}}}"/>
                 </ItemsPanelTemplate>
 
             </Setter.Value>
