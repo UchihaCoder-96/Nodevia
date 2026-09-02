@@ -16,10 +16,7 @@ public class NodeControl : Control
     }
 
     public static readonly DependencyProperty NodeProperty =
-        DependencyProperty.Register(
-            nameof(Node),
-            typeof(Node),
-            typeof(NodeControl),
+        DependencyProperty.Register(nameof(Node), typeof(Node), typeof(NodeControl),
             new FrameworkPropertyMetadata(null));
 
     public Node? Node
@@ -29,8 +26,10 @@ public class NodeControl : Control
     }
 
     private Canvas? _canvas;
-    private Point _grabOffset;
+    private NodeCanvas? _ownerCanvas;
     private bool _isDragging;
+    private Point _dragStartMouseCanvas;
+    private readonly Dictionary<Node, Point> _dragStartPositions = new();
 
     protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
     {
@@ -40,14 +39,25 @@ public class NodeControl : Control
             return;
 
         _canvas = FindAncestor<Canvas>(this);
-        if (_canvas is null)
+        _ownerCanvas = FindAncestor<NodeCanvas>(this);
+        if (_canvas is null || _ownerCanvas is null)
             return;
 
-        // Where inside the node did we grab it (in Canvas space)
-        Point mouseOnCanvas = e.GetPosition(_canvas);
-        _grabOffset = new Point(
-            mouseOnCanvas.X - Node.Position.X,
-            mouseOnCanvas.Y - Node.Position.Y);
+        _ownerCanvas.BringToFront(Node);
+
+        bool ctrl = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
+        if (ctrl)
+            _ownerCanvas.ToggleSelection(Node);
+        else if (!Node.IsSelected)
+            _ownerCanvas.SelectOnly(Node);
+        // else: already selected, no ctrl -> keep selection so the whole group can drag
+
+        _dragStartMouseCanvas = e.GetPosition(_canvas);
+        _dragStartPositions.Clear();
+
+        IEnumerable<Node> toDrag = Node.IsSelected ? _ownerCanvas.SelectedNodes : new[] { Node };
+        foreach (var n in toDrag)
+            _dragStartPositions[n] = n.Position;
 
         _isDragging = true;
         CaptureMouse();
@@ -58,14 +68,14 @@ public class NodeControl : Control
     {
         base.OnMouseMove(e);
 
-        if (!_isDragging || _canvas is null || Node is null)
+        if (!_isDragging || _canvas is null)
             return;
 
-        Point mouseOnCanvas = e.GetPosition(_canvas);
+        Point current = e.GetPosition(_canvas);
+        Vector delta = current - _dragStartMouseCanvas;
 
-        Node.Position = new Point(
-            mouseOnCanvas.X - _grabOffset.X,
-            mouseOnCanvas.Y - _grabOffset.Y);
+        foreach (var kvp in _dragStartPositions)
+            kvp.Key.Position = new Point(kvp.Value.X + delta.X, kvp.Value.Y + delta.Y);
     }
 
     protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
@@ -87,21 +97,20 @@ public class NodeControl : Control
 
         _isDragging = false;
         _canvas = null;
+        _ownerCanvas = null;
+        _dragStartPositions.Clear();
         ReleaseMouseCapture();
     }
 
     private static T? FindAncestor<T>(DependencyObject start) where T : DependencyObject
     {
         DependencyObject? current = VisualTreeHelper.GetParent(start);
-
         while (current is not null)
         {
             if (current is T match)
                 return match;
-
             current = VisualTreeHelper.GetParent(current);
         }
-
         return null;
     }
 }

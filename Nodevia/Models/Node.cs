@@ -9,6 +9,8 @@ public class Node : INotifyPropertyChanged
 {
     private string _title = "Node";
     private Point _position;
+    private int _zIndex;
+    private bool _isSelected;
 
     public Guid Id { get; } = Guid.NewGuid();
 
@@ -34,6 +36,32 @@ public class Node : INotifyPropertyChanged
                 return;
 
             _position = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set
+        {
+            if (_isSelected == value)
+                return;
+
+            _isSelected = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public int ZIndex
+    {
+        get => _zIndex;
+        set
+        {
+            if (_zIndex == value)
+                return;
+
+            _zIndex = value;
             OnPropertyChanged();
         }
     }
