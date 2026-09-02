@@ -3,43 +3,134 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:Nodevia.Controls">
 
+    <!-- ============================================================
+         NodeControl
+         ============================================================ -->
+
     <Style TargetType="{x:Type local:NodeControl}">
 
-        <Setter Property="Template">
+        <Setter Property="Width" Value="180"/>
+        <Setter Property="Height" Value="100"/>
 
+        <Setter Property="Template">
             <Setter.Value>
 
                 <ControlTemplate TargetType="{x:Type local:NodeControl}">
 
                     <Border
-                        Background="#252525"
-                        BorderBrush="#555555"
-                        BorderThickness="1"
+                        Background="Gray"
+                        BorderBrush="Black"
+                        BorderThickness="2"
                         CornerRadius="6">
 
-                        <StackPanel>
-
-                            <Border
-                                Background="#333333"
-                                Padding="10,6">
-
-                                <TextBlock
-                                    Text="{TemplateBinding Title}"
-                                    Foreground="White"
-                                    FontWeight="SemiBold"/>
-
-                            </Border>
-
-                        </StackPanel>
+                        <TextBlock
+                            Text="{Binding Node.Title,
+                                RelativeSource={RelativeSource TemplatedParent}}"
+                            Foreground="White"
+                            FontSize="20"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"/>
 
                     </Border>
 
                 </ControlTemplate>
 
             </Setter.Value>
+        </Setter>
 
+    </Style>
+
+
+    <!-- ============================================================
+         NodeCanvas
+         ============================================================ -->
+
+    <Style TargetType="{x:Type local:NodeCanvas}">
+
+        <!-- Canvas appearance -->
+
+        <Setter Property="Background" Value="#202020"/>
+        <Setter Property="ClipToBounds" Value="True"/>
+
+
+        <!-- NodeCanvas template -->
+
+        <Setter Property="Template">
+            <Setter.Value>
+
+                <ControlTemplate TargetType="{x:Type local:NodeCanvas}">
+
+                    <Border
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}">
+
+                        <ScrollViewer
+                            Focusable="False"
+                            HorizontalScrollBarVisibility="Disabled"
+                            VerticalScrollBarVisibility="Disabled">
+
+                            <!-- ItemsPresenter displays ItemsControl's generated items -->
+
+                            <ItemsPresenter/>
+
+                        </ScrollViewer>
+
+                    </Border>
+
+                </ControlTemplate>
+
+            </Setter.Value>
+        </Setter>
+
+
+        <!-- Items Panel: each nodeControl is placed inside this canvas -->
+
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+
+                <ItemsPanelTemplate>
+
+                    <Canvas/>
+
+                </ItemsPanelTemplate>
+
+            </Setter.Value>
+        </Setter>
+
+        <Setter Property="ItemTemplate">
+            <Setter.Value>
+
+                <DataTemplate>
+
+                    <local:NodeControl
+                        Node="{Binding}"/>
+
+                </DataTemplate>
+
+            </Setter.Value>
+        </Setter>
+
+        <Setter Property="ItemContainerStyle">
+            <Setter.Value>
+
+                <Style TargetType="{x:Type ContentPresenter}">
+
+                    <Setter
+                        Property="Canvas.Left"
+                        Value="{Binding Position.X}"/>
+
+                    <Setter
+                        Property="Canvas.Top"
+                        Value="{Binding Position.Y}"/>
+
+                </Style>
+
+            </Setter.Value>
         </Setter>
 
     </Style>
 
 </ResourceDictionary>
+    
+    
