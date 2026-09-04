@@ -191,6 +191,23 @@ public class NodeCanvas : ItemsControl
         ((NodeCanvas)d).SyncTransform();
     }
 
+    public Point ScreenToCanvas(Point screenPoint)
+    {
+        if (Zoom <= 0)
+            return screenPoint;
+
+        return new Point(
+            (screenPoint.X - PanX) / Zoom,
+            (screenPoint.Y - PanY) / Zoom);
+    }
+
+    public Point CanvasToScreen(Point canvasPoint)
+    {
+        return new Point(
+            canvasPoint.X * Zoom + PanX,
+            canvasPoint.Y * Zoom + PanY);
+    }
+
     private void SyncTransform()
     {
         if (_scaleTransform is not null)

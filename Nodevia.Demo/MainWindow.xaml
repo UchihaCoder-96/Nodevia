@@ -45,47 +45,6 @@
 
             </MenuItem>
 
-            <MenuItem Header="_Node">
-
-                <MenuItem
-                    Header="_Add">
-
-                    <MenuItem
-                        Header="Add"
-                        Click="AddNode_Click"/>
-
-                    <MenuItem
-                        Header="Subtract"
-                        Click="SubtractNode_Click"/>
-
-                    <MenuItem
-                        Header="Multiply"
-                        Click="MultiplyNode_Click"/>
-
-                    <MenuItem
-                        Header="Divide"
-                        Click="DivideNode_Click"/>
-
-                    <Separator/>
-
-                    <MenuItem
-                        Header="Constant"
-                        Click="ConstantNode_Click"/>
-
-                    <MenuItem
-                        Header="Negate"
-                        Click="NegateNode_Click"/>
-
-                    <Separator/>
-
-                    <MenuItem
-                        Header="Print"
-                        Click="PrintNode_Click"/>
-
-                </MenuItem>
-
-            </MenuItem>
-
         </Menu>
         
         <nodevia:NodeCanvas
