@@ -124,27 +124,35 @@
                         BorderThickness="{TemplateBinding BorderThickness}"
                         ClipToBounds="True">
 
-                        <Canvas x:Name="PART_TransformRoot">
-                            <Canvas.RenderTransform>
-                                <TransformGroup>
-                                    <ScaleTransform x:Name="PART_ScaleTransform"/>
-                                    <TranslateTransform x:Name="PART_PanTransform"/>
-                                </TransformGroup>
-                            </Canvas.RenderTransform>
+                        <Grid>
+                            <local:BackgroundLayer
+                                x:Name="PART_BackgroundLayer"
+                                PanX="{Binding PanX, RelativeSource={RelativeSource TemplatedParent}}"
+                                PanY="{Binding PanY, RelativeSource={RelativeSource TemplatedParent}}"
+                                Zoom="{Binding Zoom, RelativeSource={RelativeSource TemplatedParent}}"/>
+                            
+                            <Canvas x:Name="PART_TransformRoot">
+                                <Canvas.RenderTransform>
+                                    <TransformGroup>
+                                        <ScaleTransform x:Name="PART_ScaleTransform"/>
+                                        <TranslateTransform x:Name="PART_PanTransform"/>
+                                    </TransformGroup>
+                                </Canvas.RenderTransform>
 
-                            <local:ConnectionLayer x:Name="PART_ConnectionLayer" IsHitTestVisible="False"/>
+                                <local:ConnectionLayer x:Name="PART_ConnectionLayer" IsHitTestVisible="False"/>
 
-                            <ItemsPresenter x:Name="PART_ItemsPresenter"/>
+                                <ItemsPresenter x:Name="PART_ItemsPresenter"/>
 
-                            <Rectangle
-                                x:Name="PART_SelectionBox"
-                                Fill="#3300AEFF"
-                                Stroke="#FF00AEFF"
-                                StrokeThickness="1"
-                                IsHitTestVisible="False"
-                                Visibility="Collapsed"/>
+                                <Rectangle
+                                    x:Name="PART_SelectionBox"
+                                    Fill="#3300AEFF"
+                                    Stroke="#FF00AEFF"
+                                    StrokeThickness="1"
+                                    IsHitTestVisible="False"
+                                    Visibility="Collapsed"/>
 
-                        </Canvas>
+                            </Canvas>
+                        </Grid>
                     </Border>
 
                 </ControlTemplate>

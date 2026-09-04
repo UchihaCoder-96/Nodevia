@@ -1,6 +1,6 @@
 ﻿using Nodevia.Models;
+using Nodevia.Rendering;
 using Nodevia.Routing;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,7 +14,7 @@ namespace Nodevia.Controls;
 
 public class NodeCanvas : ItemsControl
 {
-    public static readonly Size NodeVisualSize = new(180, 100); // temporary
+    public static readonly Size NodeVisualSize = new(180, 100); // temporary, until Node has real size
 
     static NodeCanvas()
     {
@@ -28,10 +28,16 @@ public class NodeCanvas : ItemsControl
         Graph = new NodeGraph();
     }
 
+    // ============================================================
+    // Template parts
+    // ============================================================
+
     private Canvas? _transformRoot;
     private Rectangle? _selectionBox;
     private ScaleTransform? _scaleTransform;
     private TranslateTransform? _panTransform;
+    private ConnectionLayer? _connectionLayer;
+    private BackgroundLayer? _backgroundLayer;
 
     public override void OnApplyTemplate()
     {
@@ -42,6 +48,10 @@ public class NodeCanvas : ItemsControl
         _scaleTransform = GetTemplateChild("PART_ScaleTransform") as ScaleTransform;
         _panTransform = GetTemplateChild("PART_PanTransform") as TranslateTransform;
         _connectionLayer = GetTemplateChild("PART_ConnectionLayer") as ConnectionLayer;
+        _backgroundLayer = GetTemplateChild("PART_BackgroundLayer") as BackgroundLayer;
+
+        if (_backgroundLayer is not null)
+            _backgroundLayer.Renderer = BackgroundRenderer;
 
         if (_connectionLayer is not null)
         {
@@ -53,6 +63,7 @@ public class NodeCanvas : ItemsControl
 
         SyncTransform();
 
+        ItemContainerGenerator.StatusChanged -= OnItemContainerGeneratorStatusChanged;
         ItemContainerGenerator.StatusChanged += OnItemContainerGeneratorStatusChanged;
     }
 
@@ -64,9 +75,9 @@ public class NodeCanvas : ItemsControl
         Dispatcher.BeginInvoke(DispatcherPriority.Loaded, (Action)InvalidateConnections);
     }
 
-    // ------------------------------------------------------------
+    // ============================================================
     // Graph
-    // ------------------------------------------------------------
+    // ============================================================
 
     public static readonly DependencyProperty GraphProperty =
         DependencyProperty.Register(
@@ -103,9 +114,9 @@ public class NodeCanvas : ItemsControl
 
     public void InvalidateConnections() => _connectionLayer?.InvalidateVisual();
 
-    // ------------------------------------------------------------
+    // ============================================================
     // Pan
-    // ------------------------------------------------------------
+    // ============================================================
 
     public static readonly DependencyProperty PanXProperty =
         DependencyProperty.Register(nameof(PanX), typeof(double), typeof(NodeCanvas),
@@ -127,9 +138,39 @@ public class NodeCanvas : ItemsControl
         set => SetValue(PanYProperty, value);
     }
 
-    // ------------------------------------------------------------
+    private bool _isPanning;
+    private Point _panStartMouse;
+    private Point _panStartOffset;
+
+    private void BeginPan(MouseButtonEventArgs e)
+    {
+        _isPanning = true;
+        _panStartMouse = e.GetPosition(this);
+        _panStartOffset = new Point(PanX, PanY);
+        CaptureMouse();
+        e.Handled = true;
+    }
+
+    private void UpdatePan(MouseEventArgs e)
+    {
+        Point current = e.GetPosition(this);
+        Vector delta = current - _panStartMouse;
+        PanX = _panStartOffset.X + delta.X;
+        PanY = _panStartOffset.Y + delta.Y;
+    }
+
+    private void EndPan()
+    {
+        if (!_isPanning)
+            return;
+
+        _isPanning = false;
+        ReleaseMouseCapture();
+    }
+
+    // ============================================================
     // Zoom
-    // ------------------------------------------------------------
+    // ============================================================
 
     public static readonly DependencyProperty ZoomProperty =
         DependencyProperty.Register(nameof(Zoom), typeof(double), typeof(NodeCanvas),
@@ -191,9 +232,9 @@ public class NodeCanvas : ItemsControl
         e.Handled = true;
     }
 
-    // ------------------------------------------------------------
+    // ============================================================
     // World size
-    // ------------------------------------------------------------
+    // ============================================================
 
     public static readonly DependencyProperty WorldWidthProperty =
         DependencyProperty.Register(nameof(WorldWidth), typeof(double), typeof(NodeCanvas),
@@ -215,9 +256,31 @@ public class NodeCanvas : ItemsControl
         set => SetValue(WorldHeightProperty, value);
     }
 
-    // ------------------------------------------------------------
+    // ============================================================
+    // Background rendering
+    // ============================================================
+
+    public static readonly DependencyProperty BackgroundRendererProperty =
+        DependencyProperty.Register(nameof(BackgroundRenderer), typeof(CanvasBackgroundRenderer), typeof(NodeCanvas),
+            new FrameworkPropertyMetadata(new GridBackgroundRenderer(), OnBackgroundRendererChanged));
+
+    public CanvasBackgroundRenderer BackgroundRenderer
+    {
+        get => (CanvasBackgroundRenderer)GetValue(BackgroundRendererProperty);
+        set => SetValue(BackgroundRendererProperty, value);
+    }
+
+    private static void OnBackgroundRendererChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var canvas = (NodeCanvas)d;
+        if (canvas._backgroundLayer is not null)
+            canvas._backgroundLayer.Renderer = (CanvasBackgroundRenderer)e.NewValue;
+    }
+
+    // ============================================================
     // Selection / Z-order
-    // ------------------------------------------------------------
+    // (public API called by NodeControl)
+    // ============================================================
 
     private int _nextZIndex = 1;
 
@@ -232,32 +295,6 @@ public class NodeCanvas : ItemsControl
     }
 
     public void ToggleSelection(Node node) => node.IsSelected = !node.IsSelected;
-
-    // ------------------------------------------------------------
-    // Panning (middle mouse)
-    // ------------------------------------------------------------
-
-    private bool _isPanning;
-    private Point _panStartMouse;
-    private Point _panStartOffset;
-
-    private void BeginPan(MouseButtonEventArgs e)
-    {
-        _isPanning = true;
-        _panStartMouse = e.GetPosition(this);
-        _panStartOffset = new Point(PanX, PanY);
-        CaptureMouse();
-        e.Handled = true;
-    }
-
-    private void EndPan()
-    {
-        if (!_isPanning)
-            return;
-
-        _isPanning = false;
-        ReleaseMouseCapture();
-    }
 
     // ------------------------------------------------------------
     // Rubber-band selection (left mouse on empty space)
@@ -341,47 +378,88 @@ public class NodeCanvas : ItemsControl
     }
 
     // ------------------------------------------------------------
-    // Mouse routing
+    // Routing (pluggable connection curve)
     // ------------------------------------------------------------
 
-    protected override void OnMouseDown(MouseButtonEventArgs e)
+    public static readonly DependencyProperty RouteProperty =
+        DependencyProperty.Register(nameof(Route), typeof(ConnectionRoute), typeof(NodeCanvas),
+            new FrameworkPropertyMetadata(new BezierConnectionRoute(), OnRouteChanged));
+
+    public ConnectionRoute Route
     {
-        base.OnMouseDown(e);
+        get => (ConnectionRoute)GetValue(RouteProperty);
+        set => SetValue(RouteProperty, value);
+    }
 
-        switch (e.ChangedButton)
+    private static void OnRouteChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var canvas = (NodeCanvas)d;
+        if (canvas._connectionLayer is not null)
+            canvas._connectionLayer.Route = (ConnectionRoute)e.NewValue;
+    }
+
+    // ------------------------------------------------------------
+    // Port registry (Port -> PortControl lookup, kept in sync)
+    // ------------------------------------------------------------
+
+    private readonly Dictionary<Port, PortControl> _portControlsByPort = new();
+
+    public void RegisterPortControl(PortControl control)
+    {
+        if (control.Port is not null)
+            _portControlsByPort[control.Port] = control;
+    }
+
+    public void UnregisterPortControl(PortControl control)
+    {
+        if (control.Port is not null &&
+            _portControlsByPort.TryGetValue(control.Port, out var existing) &&
+            ReferenceEquals(existing, control))
         {
-            case MouseButton.Middle:
-                BeginPan(e);
-                break;
-
-            case MouseButton.Left:
-                if (!e.Handled) // a node already handled its own click
-                    BeginSelection(e);
-                break;
+            _portControlsByPort.Remove(control.Port);
         }
     }
 
-    protected override void OnMouseMove(MouseEventArgs e)
+    private PortControl? FindPortControl(Port port) =>
+        _portControlsByPort.TryGetValue(port, out var control) ? control : null;
+
+    private PortControl? FindPortControlAt(Point pointInCanvasSpace)
     {
-        base.OnMouseMove(e);
+        var result = VisualTreeHelper.HitTest(this, pointInCanvasSpace);
+        if (result?.VisualHit is not DependencyObject hit)
+            return null;
 
-        if (_isConnectingPort)
+        DependencyObject? current = hit;
+        while (current is not null)
         {
-            UpdateConnectionPreview(e);
-            return;
+            if (current is PortControl pc)
+                return pc;
+            current = VisualTreeHelper.GetParent(current);
         }
+        return null;
+    }
 
-        if (_isPanning)
-        {
-            Point current = e.GetPosition(this);
-            Vector delta = current - _panStartMouse;
-            PanX = _panStartOffset.X + delta.X;
-            PanY = _panStartOffset.Y + delta.Y;
+    // ------------------------------------------------------------
+    // Drag-to-connect (called by PortControl)
+    // ------------------------------------------------------------
+
+    private bool _isConnectingPort;
+    private PortControl? _connectionSourceControl;
+
+    public void BeginConnectionDrag(PortControl sourceControl)
+    {
+        if (sourceControl.Port is null || _transformRoot is null)
             return;
-        }
 
-        if (_isSelecting)
-            UpdateSelection(e);
+        _isConnectingPort = true;
+        _connectionSourceControl = sourceControl;
+
+        Point sourcePos = sourceControl.GetCenterRelativeTo(_transformRoot);
+        PortSide side = sourceControl.Port.Direction == PortDirection.Output ? PortSide.Right : PortSide.Left;
+
+        _connectionLayer?.SetPreview(sourcePos, sourcePos, side);
+
+        CaptureMouse();
     }
 
     private void UpdateConnectionPreview(MouseEventArgs e)
@@ -394,23 +472,6 @@ public class NodeCanvas : ItemsControl
         PortSide side = sourcePort.Direction == PortDirection.Output ? PortSide.Right : PortSide.Left;
 
         _connectionLayer?.SetPreview(sourcePos, current, side);
-    }
-
-    protected override void OnMouseUp(MouseButtonEventArgs e)
-    {
-        base.OnMouseUp(e);
-
-        if (e.ChangedButton == MouseButton.Middle)
-        {
-            EndPan();
-        }
-        else if (e.ChangedButton == MouseButton.Left)
-        {
-            if (_isConnectingPort)
-                EndConnectionDrag(e);
-            else
-                EndSelection();
-        }
     }
 
     private void EndConnectionDrag(MouseButtonEventArgs e)
@@ -431,6 +492,7 @@ public class NodeCanvas : ItemsControl
         if (targetControl?.Port is not Port targetPort || ReferenceEquals(targetPort, sourcePort))
             return;
 
+        // Figure out input/output, regardless of which one the user grabbed first
         Port? output = null;
         Port? input = null;
 
@@ -458,20 +520,72 @@ public class NodeCanvas : ItemsControl
         }
     }
 
-    private PortControl? FindPortControlAt(Point pointInCanvasSpace)
+    private void CancelConnectionDrag()
     {
-        var result = VisualTreeHelper.HitTest(this, pointInCanvasSpace);
-        if (result?.VisualHit is not DependencyObject hit)
-            return null;
+        if (!_isConnectingPort)
+            return;
 
-        DependencyObject? current = hit;
-        while (current is not null)
+        _isConnectingPort = false;
+        _connectionSourceControl = null;
+        _connectionLayer?.ClearPreview();
+    }
+
+    // ============================================================
+    // Mouse routing
+    // ============================================================
+
+    protected override void OnMouseDown(MouseButtonEventArgs e)
+    {
+        base.OnMouseDown(e);
+
+        switch (e.ChangedButton)
         {
-            if (current is PortControl pc)
-                return pc;
-            current = VisualTreeHelper.GetParent(current);
+            case MouseButton.Middle:
+                BeginPan(e);
+                break;
+
+            case MouseButton.Left:
+                if (!e.Handled) // a node or port already handled its own click
+                    BeginSelection(e);
+                break;
         }
-        return null;
+    }
+
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        base.OnMouseMove(e);
+
+        if (_isConnectingPort)
+        {
+            UpdateConnectionPreview(e);
+            return;
+        }
+
+        if (_isPanning)
+        {
+            UpdatePan(e);
+            return;
+        }
+
+        if (_isSelecting)
+            UpdateSelection(e);
+    }
+
+    protected override void OnMouseUp(MouseButtonEventArgs e)
+    {
+        base.OnMouseUp(e);
+
+        if (e.ChangedButton == MouseButton.Middle)
+        {
+            EndPan();
+        }
+        else if (e.ChangedButton == MouseButton.Left)
+        {
+            if (_isConnectingPort)
+                EndConnectionDrag(e);
+            else
+                EndSelection();
+        }
     }
 
     protected override void OnLostMouseCapture(MouseEventArgs e)
@@ -479,72 +593,7 @@ public class NodeCanvas : ItemsControl
         base.OnLostMouseCapture(e);
         EndPan();
         EndSelection();
-
-        if (_isConnectingPort)
-        {
-            _isConnectingPort = false;
-            _connectionSourceControl = null;
-            _connectionLayer?.ClearPreview();
-        }
+        CancelConnectionDrag();
     }
-
-    // ---------------------------------------------------
-    // Wiring Connection
-    // ---------------------------------------------------
-
-    private ConnectionLayer? _connectionLayer;
-
-    public static readonly DependencyProperty RouteProperty =
-    DependencyProperty.Register(nameof(Route), typeof(ConnectionRoute), typeof(NodeCanvas),
-        new FrameworkPropertyMetadata(new BezierConnectionRoute(), OnRouteChanged));
-
-    public ConnectionRoute Route
-    {
-        get => (ConnectionRoute)GetValue(RouteProperty);
-        set => SetValue(RouteProperty, value);
-    }
-
-    private static void OnRouteChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        var canvas = (NodeCanvas)d;
-        if (canvas._connectionLayer is not null)
-            canvas._connectionLayer.Route = (ConnectionRoute)e.NewValue;
-    }
-
-    private bool _isConnectingPort;
-    private PortControl? _connectionSourceControl;
-
-    public void BeginConnectionDrag(PortControl sourceControl)
-    {
-        if (sourceControl.Port is null || _transformRoot is null)
-            return;
-
-        _isConnectingPort = true;
-        _connectionSourceControl = sourceControl;
-
-        Point sourcePos = sourceControl.GetCenterRelativeTo(_transformRoot);
-        PortSide side = sourceControl.Port.Direction == PortDirection.Output ? PortSide.Right : PortSide.Left;
-
-        _connectionLayer?.SetPreview(sourcePos, sourcePos, side);
-
-        CaptureMouse();
-    }
-
-    private readonly Dictionary<Port, PortControl> _portControlsByPort = new();
-
-    public void RegisterPortControl(PortControl control)
-    {
-        if (control.Port is not null)
-            _portControlsByPort[control.Port] = control;
-    }
-
-    public void UnregisterPortControl(PortControl control)
-    {
-        if (control.Port is not null && _portControlsByPort.TryGetValue(control.Port, out var existing) && ReferenceEquals(existing, control))
-            _portControlsByPort.Remove(control.Port);
-    }
-
-    private PortControl? FindPortControl(Port port) =>
-        _portControlsByPort.TryGetValue(port, out var control) ? control : null;
 }
 
