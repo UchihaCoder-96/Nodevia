@@ -23,21 +23,18 @@ namespace Nodevia.Demo
         {
             InitializeComponent();
 
-            NodeCanvas.Nodes.Add(
-                new Node
-                {
-                    Title = "Multiply",
-                    Position = new Point(450, 250)
-                });
-
             var addNode = new Node { Title = "Add", Position = new Point(100, 100) };
             addNode.InputPorts.Add(new Port("A", PortDirection.Input, "float"));
             addNode.InputPorts.Add(new Port("B", PortDirection.Input, "float"));
             addNode.OutputPorts.Add(new Port("Result", PortDirection.Output, "float"));
 
-            // addNode.InputPorts.Add(new Port("Bad", PortDirection.Output)); // not possible, hehe...
+            var printNode = new Node { Title = "Print", Position = new Point(450, 250) };
+            printNode.InputPorts.Add(new Port("Value", PortDirection.Input, "float"));
 
-            NodeCanvas.Nodes.Add(addNode);
+            NodeCanvas.Graph.Nodes.Add(addNode);
+            NodeCanvas.Graph.Nodes.Add(printNode);
+
+            NodeCanvas.Graph.Connect(addNode.OutputPorts[0], printNode.InputPorts[0]); // just a sanity check
 
         }
     }

@@ -19,11 +19,9 @@ public class NodeCanvas : ItemsControl
             new FrameworkPropertyMetadata(typeof(NodeCanvas)));
     }
 
-    public ObservableCollection<Node> Nodes { get; } = new();
-
     public NodeCanvas()
     {
-        ItemsSource = Nodes;
+        Graph = new NodeGraph();
     }
 
     private Canvas? _transformRoot;
@@ -43,6 +41,32 @@ public class NodeCanvas : ItemsControl
         SyncTransform();
     }
 
+    // ------------------------------------------------------------
+    // Graph
+    // ------------------------------------------------------------
+
+    public static readonly DependencyProperty GraphProperty =
+        DependencyProperty.Register(
+            nameof(Graph),
+            typeof(NodeGraph),
+            typeof(NodeCanvas),
+            new FrameworkPropertyMetadata(null, OnGraphChanged));
+
+    public NodeGraph Graph
+    {
+        get => (NodeGraph)GetValue(GraphProperty);
+        set => SetValue(GraphProperty, value);
+    }
+
+    private static void OnGraphChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var canvas = (NodeCanvas)d;
+        canvas.ItemsSource = canvas.Graph?.Nodes;
+    }
+
+    // ------------------------------------------------------------
+    // Pan
+    // ------------------------------------------------------------
 
     public static readonly DependencyProperty PanXProperty =
         DependencyProperty.Register(nameof(PanX), typeof(double), typeof(NodeCanvas),
@@ -63,6 +87,10 @@ public class NodeCanvas : ItemsControl
         get => (double)GetValue(PanYProperty);
         set => SetValue(PanYProperty, value);
     }
+
+    // ------------------------------------------------------------
+    // Zoom
+    // ------------------------------------------------------------
 
     public static readonly DependencyProperty ZoomProperty =
         DependencyProperty.Register(nameof(Zoom), typeof(double), typeof(NodeCanvas),
@@ -124,6 +152,10 @@ public class NodeCanvas : ItemsControl
         e.Handled = true;
     }
 
+    // ------------------------------------------------------------
+    // World size
+    // ------------------------------------------------------------
+
     public static readonly DependencyProperty WorldWidthProperty =
         DependencyProperty.Register(nameof(WorldWidth), typeof(double), typeof(NodeCanvas),
             new FrameworkPropertyMetadata(5000.0));
@@ -144,19 +176,27 @@ public class NodeCanvas : ItemsControl
         set => SetValue(WorldHeightProperty, value);
     }
 
+    // ------------------------------------------------------------
+    // Selection / Z-order
+    // ------------------------------------------------------------
+
     private int _nextZIndex = 1;
 
-    public IEnumerable<Node> SelectedNodes => Nodes.Where(n => n.IsSelected);
+    public IEnumerable<Node> SelectedNodes => Graph.Nodes.Where(n => n.IsSelected);
 
     public void BringToFront(Node node) => node.ZIndex = _nextZIndex++;
 
     public void SelectOnly(Node node)
     {
-        foreach (var n in Nodes)
+        foreach (var n in Graph.Nodes)
             n.IsSelected = ReferenceEquals(n, node);
     }
 
     public void ToggleSelection(Node node) => node.IsSelected = !node.IsSelected;
+
+    // ------------------------------------------------------------
+    // Panning (middle mouse)
+    // ------------------------------------------------------------
 
     private bool _isPanning;
     private Point _panStartMouse;
@@ -179,6 +219,10 @@ public class NodeCanvas : ItemsControl
         _isPanning = false;
         ReleaseMouseCapture();
     }
+
+    // ------------------------------------------------------------
+    // Rubber-band selection (left mouse on empty space)
+    // ------------------------------------------------------------
 
     private bool _isSelecting;
     private Point _selectionStartWorld;
@@ -206,7 +250,7 @@ public class NodeCanvas : ItemsControl
 
         if (!_additiveSelection)
         {
-            foreach (var n in Nodes)
+            foreach (var n in Graph.Nodes)
                 n.IsSelected = false;
         }
 
@@ -233,7 +277,7 @@ public class NodeCanvas : ItemsControl
 
         var rect = new Rect(x, y, w, h);
 
-        foreach (var n in Nodes)
+        foreach (var n in Graph.Nodes)
         {
             bool intersects = new Rect(n.Position, NodeVisualSize).IntersectsWith(rect);
 
@@ -256,6 +300,10 @@ public class NodeCanvas : ItemsControl
 
         ReleaseMouseCapture();
     }
+
+    // ------------------------------------------------------------
+    // Mouse routing
+    // ------------------------------------------------------------
 
     protected override void OnMouseDown(MouseButtonEventArgs e)
     {
