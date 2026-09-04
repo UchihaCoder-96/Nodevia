@@ -126,6 +126,44 @@
 
     </Style>
 
+    <!-- PortControl -->
+    <Style TargetType="{x:Type local:PortControl}">
+
+        <Setter Property="Width" Value="14"/>
+        <Setter Property="Height" Value="14"/>
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:PortControl}">
+
+                    <Ellipse
+                    x:Name="PART_Dot"
+                    Fill="#FFCCCCCC"
+                    Stroke="Black"
+                    StrokeThickness="1.5"/>
+
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+
+        <Style.Triggers>
+
+            <DataTrigger
+            Binding="{Binding Port.Direction, RelativeSource={RelativeSource Self}}"
+            Value="{x:Static model:PortDirection.Output}">
+                <Setter Property="HorizontalAlignment" Value="Right"/>
+            </DataTrigger>
+
+            <DataTrigger
+            Binding="{Binding Port.Direction, RelativeSource={RelativeSource Self}}"
+            Value="{x:Static model:PortDirection.Input}">
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+            </DataTrigger>
+
+        </Style.Triggers>
+
+    </Style>
+
 </ResourceDictionary>
     
     

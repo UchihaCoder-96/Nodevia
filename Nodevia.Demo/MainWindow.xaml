@@ -7,9 +7,15 @@
     Width="1000"
     Height="700">
 
-    <nodevia:NodeCanvas
-    x:Name="NodeCanvas"
-    Background="#FF070718"/>
+    <Grid>
+        <nodevia:NodeCanvas
+            x:Name="NodeCanvas"
+            Background="#FF070718"/>
+
+        <nodevia:PortControl
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"/>
+    </Grid>
 
 </Window>
 
