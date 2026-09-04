@@ -1,5 +1,6 @@
 ﻿using Nodevia.Controls;
 using Nodevia.Models;
+using Nodevia.Routing;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -34,7 +35,6 @@ namespace Nodevia.Demo
             NodeCanvas.Graph.Nodes.Add(addNode);
             NodeCanvas.Graph.Nodes.Add(printNode);
 
-            NodeCanvas.Graph.Connect(addNode.OutputPorts[0], printNode.InputPorts[0]); // just a sanity check
 
         }
     }

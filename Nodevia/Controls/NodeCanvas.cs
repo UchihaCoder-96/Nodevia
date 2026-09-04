@@ -1,10 +1,14 @@
 ﻿using Nodevia.Models;
+using Nodevia.Routing;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace Nodevia.Controls;
 
@@ -37,8 +41,27 @@ public class NodeCanvas : ItemsControl
         _selectionBox = GetTemplateChild("PART_SelectionBox") as Rectangle;
         _scaleTransform = GetTemplateChild("PART_ScaleTransform") as ScaleTransform;
         _panTransform = GetTemplateChild("PART_PanTransform") as TranslateTransform;
+        _connectionLayer = GetTemplateChild("PART_ConnectionLayer") as ConnectionLayer;
+
+        if (_connectionLayer is not null)
+        {
+            _connectionLayer.PositionRoot = _transformRoot;
+            _connectionLayer.PortControlLookup = FindPortControl;
+            _connectionLayer.Route = Route;
+            _connectionLayer.Graph = Graph;
+        }
 
         SyncTransform();
+
+        ItemContainerGenerator.StatusChanged += OnItemContainerGeneratorStatusChanged;
+    }
+
+    private void OnItemContainerGeneratorStatusChanged(object? sender, EventArgs e)
+    {
+        if (ItemContainerGenerator.Status != GeneratorStatus.ContainersGenerated)
+            return;
+
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, (Action)InvalidateConnections);
     }
 
     // ------------------------------------------------------------
@@ -62,7 +85,23 @@ public class NodeCanvas : ItemsControl
     {
         var canvas = (NodeCanvas)d;
         canvas.ItemsSource = canvas.Graph?.Nodes;
+
+        if (canvas._connectionLayer is not null)
+            canvas._connectionLayer.Graph = canvas.Graph;
+
+        if (e.OldValue is NodeGraph oldGraph)
+            oldGraph.Connections.CollectionChanged -= canvas.OnConnectionsChanged;
+
+        if (e.NewValue is NodeGraph newGraph)
+            newGraph.Connections.CollectionChanged += canvas.OnConnectionsChanged;
     }
+
+    private void OnConnectionsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        _connectionLayer?.InvalidateVisual();
+    }
+
+    public void InvalidateConnections() => _connectionLayer?.InvalidateVisual();
 
     // ------------------------------------------------------------
     // Pan
@@ -326,6 +365,12 @@ public class NodeCanvas : ItemsControl
     {
         base.OnMouseMove(e);
 
+        if (_isConnectingPort)
+        {
+            UpdateConnectionPreview(e);
+            return;
+        }
+
         if (_isPanning)
         {
             Point current = e.GetPosition(this);
@@ -339,14 +384,94 @@ public class NodeCanvas : ItemsControl
             UpdateSelection(e);
     }
 
+    private void UpdateConnectionPreview(MouseEventArgs e)
+    {
+        if (_transformRoot is null || _connectionSourceControl?.Port is not Port sourcePort)
+            return;
+
+        Point current = e.GetPosition(_transformRoot);
+        Point sourcePos = _connectionSourceControl.GetCenterRelativeTo(_transformRoot);
+        PortSide side = sourcePort.Direction == PortDirection.Output ? PortSide.Right : PortSide.Left;
+
+        _connectionLayer?.SetPreview(sourcePos, current, side);
+    }
+
     protected override void OnMouseUp(MouseButtonEventArgs e)
     {
         base.OnMouseUp(e);
 
         if (e.ChangedButton == MouseButton.Middle)
+        {
             EndPan();
+        }
         else if (e.ChangedButton == MouseButton.Left)
-            EndSelection();
+        {
+            if (_isConnectingPort)
+                EndConnectionDrag(e);
+            else
+                EndSelection();
+        }
+    }
+
+    private void EndConnectionDrag(MouseButtonEventArgs e)
+    {
+        _isConnectingPort = false;
+        _connectionLayer?.ClearPreview();
+        ReleaseMouseCapture();
+
+        Port? sourcePort = _connectionSourceControl?.Port;
+        _connectionSourceControl = null;
+
+        if (sourcePort is null)
+            return;
+
+        Point screenPos = e.GetPosition(this);
+        PortControl? targetControl = FindPortControlAt(screenPos);
+
+        if (targetControl?.Port is not Port targetPort || ReferenceEquals(targetPort, sourcePort))
+            return;
+
+        Port? output = null;
+        Port? input = null;
+
+        if (sourcePort.Direction == PortDirection.Output && targetPort.Direction == PortDirection.Input)
+        {
+            output = sourcePort;
+            input = targetPort;
+        }
+        else if (sourcePort.Direction == PortDirection.Input && targetPort.Direction == PortDirection.Output)
+        {
+            output = targetPort;
+            input = sourcePort;
+        }
+
+        if (output is null || input is null)
+            return; // dropped on a same-direction port - not a valid connection
+
+        try
+        {
+            Graph.Connect(output, input);
+        }
+        catch (InvalidOperationException)
+        {
+            // A visual "rejected" cue should go here, not essential for v1.
+        }
+    }
+
+    private PortControl? FindPortControlAt(Point pointInCanvasSpace)
+    {
+        var result = VisualTreeHelper.HitTest(this, pointInCanvasSpace);
+        if (result?.VisualHit is not DependencyObject hit)
+            return null;
+
+        DependencyObject? current = hit;
+        while (current is not null)
+        {
+            if (current is PortControl pc)
+                return pc;
+            current = VisualTreeHelper.GetParent(current);
+        }
+        return null;
     }
 
     protected override void OnLostMouseCapture(MouseEventArgs e)
@@ -354,6 +479,82 @@ public class NodeCanvas : ItemsControl
         base.OnLostMouseCapture(e);
         EndPan();
         EndSelection();
+
+        if (_isConnectingPort)
+        {
+            _isConnectingPort = false;
+            _connectionSourceControl = null;
+            _connectionLayer?.ClearPreview();
+        }
+    }
+
+    // ---------------------------------------------------
+    // Wiring Connection
+    // ---------------------------------------------------
+
+    private ConnectionLayer? _connectionLayer;
+
+    private PortControl? FindPortControl(Port port)
+    {
+        if (_transformRoot is null)
+            return null;
+
+        // Simple approach for now — fine at typical node graph scale;
+        // worth revisiting with a Dictionary<Port, PortControl> cache if graphs get large.
+        return FindPortControlRecursive(_transformRoot, port);
+    }
+
+    private static PortControl? FindPortControlRecursive(DependencyObject parent, Port target)
+    {
+        int count = VisualTreeHelper.GetChildrenCount(parent);
+        for (int i = 0; i < count; i++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, i);
+
+            if (child is PortControl pc && ReferenceEquals(pc.Port, target))
+                return pc;
+
+            var found = FindPortControlRecursive(child, target);
+            if (found is not null)
+                return found;
+        }
+        return null;
+    }
+
+    public static readonly DependencyProperty RouteProperty =
+    DependencyProperty.Register(nameof(Route), typeof(ConnectionRoute), typeof(NodeCanvas),
+        new FrameworkPropertyMetadata(new BezierConnectionRoute(), OnRouteChanged));
+
+    public ConnectionRoute Route
+    {
+        get => (ConnectionRoute)GetValue(RouteProperty);
+        set => SetValue(RouteProperty, value);
+    }
+
+    private static void OnRouteChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var canvas = (NodeCanvas)d;
+        if (canvas._connectionLayer is not null)
+            canvas._connectionLayer.Route = (ConnectionRoute)e.NewValue;
+    }
+
+    private bool _isConnectingPort;
+    private PortControl? _connectionSourceControl;
+
+    public void BeginConnectionDrag(PortControl sourceControl)
+    {
+        if (sourceControl.Port is null || _transformRoot is null)
+            return;
+
+        _isConnectingPort = true;
+        _connectionSourceControl = sourceControl;
+
+        Point sourcePos = sourceControl.GetCenterRelativeTo(_transformRoot);
+        PortSide side = sourceControl.Port.Direction == PortDirection.Output ? PortSide.Right : PortSide.Left;
+
+        _connectionLayer?.SetPreview(sourcePos, sourcePos, side);
+
+        CaptureMouse();
     }
 }
 

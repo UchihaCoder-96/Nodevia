@@ -35,6 +35,9 @@ public class NodeControl : Control
     {
         base.OnMouseLeftButtonDown(e);
 
+        if (e.Handled) // a child PortControl already started a connection drag
+            return;
+
         if (Node is null)
             return;
 
@@ -76,6 +79,8 @@ public class NodeControl : Control
 
         foreach (var kvp in _dragStartPositions)
             kvp.Key.Position = new Point(kvp.Value.X + delta.X, kvp.Value.Y + delta.Y);
+
+        _ownerCanvas?.InvalidateConnections();
     }
 
     protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)

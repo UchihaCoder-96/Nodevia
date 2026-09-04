@@ -132,6 +132,8 @@
                                 </TransformGroup>
                             </Canvas.RenderTransform>
 
+                            <local:ConnectionLayer x:Name="PART_ConnectionLayer" IsHitTestVisible="False"/>
+
                             <ItemsPresenter x:Name="PART_ItemsPresenter"/>
 
                             <Rectangle
