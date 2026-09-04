@@ -11,10 +11,6 @@
         <nodevia:NodeCanvas
             x:Name="NodeCanvas"
             Background="#FF070718"/>
-
-        <nodevia:PortControl
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"/>
     </Grid>
 
 </Window>

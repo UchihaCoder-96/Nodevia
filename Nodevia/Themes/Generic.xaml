@@ -18,25 +18,78 @@
                 <ControlTemplate TargetType="{x:Type local:NodeControl}">
 
                     <Border
-                        x:Name="PART_Border"
-                        Background="Gray"
-                        BorderBrush="Black"
-                        BorderThickness="2"
-                        CornerRadius="6">
+                    x:Name="PART_Border"
+                    Background="Gray"
+                    BorderBrush="Black"
+                    BorderThickness="2"
+                    CornerRadius="6">
 
-                        <TextBlock
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Input ports -->
+                            <ItemsControl
+                            Grid.Column="0"
+                            ItemsSource="{Binding Node.InputPorts, RelativeSource={RelativeSource TemplatedParent}}"
+                            VerticalAlignment="Center"
+                            Margin="-7,0,0,0">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Vertical"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type model:Port}">
+                                        <local:PortControl
+                                        Port="{Binding}"
+                                        Margin="0,4"
+                                        ToolTip="{Binding Name}"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- Title -->
+                            <TextBlock
+                            Grid.Column="1"
                             Text="{Binding Node.Title, RelativeSource={RelativeSource TemplatedParent}}"
                             Foreground="White"
                             FontSize="20"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"/>
 
+                            <!-- Output ports -->
+                            <ItemsControl
+                            Grid.Column="2"
+                            ItemsSource="{Binding Node.OutputPorts, RelativeSource={RelativeSource TemplatedParent}}"
+                            VerticalAlignment="Center"
+                            Margin="0,0,-7,0">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Vertical"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type model:Port}">
+                                        <local:PortControl
+                                        Port="{Binding}"
+                                        Margin="0,4"
+                                        ToolTip="{Binding Name}"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                        </Grid>
+
                     </Border>
 
                     <ControlTemplate.Triggers>
                         <DataTrigger
-                            Binding="{Binding Node.IsSelected, RelativeSource={RelativeSource TemplatedParent}}"
-                            Value="True">
+                        Binding="{Binding Node.IsSelected, RelativeSource={RelativeSource TemplatedParent}}"
+                        Value="True">
                             <Setter TargetName="PART_Border" Property="BorderBrush" Value="#FF00AEFF"/>
                             <Setter TargetName="PART_Border" Property="BorderThickness" Value="3"/>
                         </DataTrigger>
