@@ -17,20 +17,28 @@ public class NodeFactory
 
         foreach (var port in definition.Inputs)
         {
-            node.InputPorts.Add(
-                new Port(
-                    port.Name,
-                    PortDirection.Input,
-                    port.DataType));
+            var nodePort = new Port(
+                port.Name,
+                PortDirection.Input,
+                port.DataType,
+                port.DefaultValue);
+
+            nodePort.EnumValues = port.EnumValues;
+
+            node.InputPorts.Add(nodePort);
         }
 
         foreach (var port in definition.Outputs)
         {
-            node.OutputPorts.Add(
-                new Port(
-                    port.Name,
-                    PortDirection.Output,
-                    port.DataType));
+            var nodePort = new Port(
+                port.Name,
+                PortDirection.Output,
+                port.DataType,
+                port.DefaultValue);
+
+            nodePort.EnumValues = port.EnumValues;
+
+            node.OutputPorts.Add(nodePort);
         }
 
         return node;

@@ -1,4 +1,5 @@
-﻿using Nodevia.Models;
+﻿using Nodevia.Commands;
+using Nodevia.Models;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -73,6 +74,9 @@ public class NodeControl : Control
         if (e.Handled) // a child PortControl already started a connection drag
             return;
 
+        if (e.OriginalSource is DependencyObject source && FindAncestor<Control>(source) is TextBox or CheckBox or ComboBox)
+            return; // ignore TextBox, CheckBox, ComboBox, etc.
+
         if (Node is null)
             return;
 
@@ -144,10 +148,39 @@ public class NodeControl : Control
             return;
 
         _isDragging = false;
+
+        PushMoveCommandIfMoved();
+
         _canvas = null;
         _ownerCanvas = null;
         _dragStartPositions.Clear();
         ReleaseMouseCapture();
+    }
+
+    private void PushMoveCommandIfMoved()
+    {
+        if (_ownerCanvas is null || _dragStartPositions.Count == 0)
+            return;
+
+        var moved = _dragStartPositions
+            .Where(kvp => kvp.Value != kvp.Key.Position)
+            .ToList();
+
+        if (moved.Count == 0)
+            return;
+
+        if (moved.Count == 1)
+        {
+            var (node, from) = (moved[0].Key, moved[0].Value);
+            _ownerCanvas.CommandManager.Push(new MoveNodeCommand(node, from, node.Position));
+            return;
+        }
+
+        var composite = new CompositeCommand("Move Nodes");
+        foreach (var (node, from) in moved)
+            composite.Add(new MoveNodeCommand(node, from, node.Position));
+
+        _ownerCanvas.CommandManager.Push(composite);
     }
 
     private static T? FindAncestor<T>(DependencyObject start) where T : DependencyObject
@@ -162,6 +195,30 @@ public class NodeControl : Control
         return null;
     }
 
+    public static readonly DependencyProperty ContentProperty =
+    DependencyProperty.Register(
+        nameof(Content),
+        typeof(object),
+        typeof(NodeControl),
+        new FrameworkPropertyMetadata(null));
 
+    public object? Content
+    {
+        get => GetValue(ContentProperty);
+        set => SetValue(ContentProperty, value);
+    }
+
+    public static readonly DependencyProperty ContentTemplateProperty =
+    DependencyProperty.Register(
+        nameof(ContentTemplate),
+        typeof(DataTemplate),
+        typeof(NodeControl),
+        new FrameworkPropertyMetadata(null));
+
+    public DataTemplate? ContentTemplate
+    {
+        get => (DataTemplate?)GetValue(ContentTemplateProperty);
+        set => SetValue(ContentTemplateProperty, value);
+    }
 }
 

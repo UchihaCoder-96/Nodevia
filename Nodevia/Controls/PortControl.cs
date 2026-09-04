@@ -28,6 +28,8 @@ public class PortControl : Control
         set => SetValue(PortProperty, value);
     }
 
+    public bool HasDefaultValue => Port?.Direction == PortDirection.Input && Port.DefaultValue is not null;
+
     public Point? GetCenterRelativeTo(FrameworkElement ancestor)
     {
         if (!IsLoaded || !ancestor.IsLoaded)
@@ -87,6 +89,32 @@ public class PortControl : Control
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
         FindAncestor<NodeCanvas>(this)?.UnregisterPortControl(this);
+    }
+
+    public static readonly DependencyProperty IsConnectedProperty =
+    DependencyProperty.Register(
+        nameof(IsConnected),
+        typeof(bool),
+        typeof(PortControl),
+        new FrameworkPropertyMetadata(false));
+
+    public bool IsConnected
+    {
+        get => (bool)GetValue(IsConnectedProperty);
+        set => SetValue(IsConnectedProperty, value);
+    }
+
+    public static readonly DependencyProperty IsHoveredProperty =
+        DependencyProperty.Register(
+            nameof(IsHovered),
+            typeof(bool),
+            typeof(PortControl),
+            new FrameworkPropertyMetadata(false));
+
+    public bool IsHovered
+    {
+        get => (bool)GetValue(IsHoveredProperty);
+        set => SetValue(IsHoveredProperty, value);
     }
 }
 

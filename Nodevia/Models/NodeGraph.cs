@@ -16,13 +16,6 @@ namespace Nodevia.Models
             Nodes.CollectionChanged += OnNodesChanged;
         }
 
-        public Connection Connect(Port source, Port target)
-        {
-            var connection = CreateConnection(source, target);
-            Connections.Add(connection);
-            return connection;
-        }
-
         public Connection CreateConnection(Port source, Port target)
         {
             if (source.Direction != PortDirection.Output)

@@ -35,8 +35,8 @@ namespace Nodevia.Demo
                     category: "Math",
                     inputs:
                     [
-                        new PortDefinition("A", PortDirection.Input, "float"),
-                new PortDefinition("B", PortDirection.Input, "float")
+                        new PortDefinition("A", PortDirection.Input, "float", 5f),
+                        new PortDefinition("B", PortDirection.Input, "float", 10f)
                     ],
                     outputs:
                     [
@@ -50,8 +50,8 @@ namespace Nodevia.Demo
                     category: "Math",
                     inputs:
                     [
-                        new PortDefinition("A", PortDirection.Input, "float"),
-                new PortDefinition("B", PortDirection.Input, "float")
+                        new PortDefinition("A", PortDirection.Input, "float", 0f),
+                        new PortDefinition("B", PortDirection.Input, "float", 0f)
                     ],
                     outputs:
                     [
@@ -65,8 +65,8 @@ namespace Nodevia.Demo
                     category: "Math",
                     inputs:
                     [
-                        new PortDefinition("A", PortDirection.Input, "float"),
-                new PortDefinition("B", PortDirection.Input, "float")
+                        new PortDefinition("A", PortDirection.Input, "float", 0f),
+                new PortDefinition("B", PortDirection.Input, "float", 0f)
                     ],
                     outputs:
                     [
@@ -80,8 +80,8 @@ namespace Nodevia.Demo
                     category: "Math",
                     inputs:
                     [
-                        new PortDefinition("A", PortDirection.Input, "float"),
-                new PortDefinition("B", PortDirection.Input, "float")
+                        new PortDefinition("A", PortDirection.Input, "float", 0f),
+                new PortDefinition("B", PortDirection.Input, "float", 0f)
                     ],
                     outputs:
                     [
@@ -95,8 +95,8 @@ namespace Nodevia.Demo
                     category: "Math",
                     inputs:
                     [
-                        new PortDefinition("A", PortDirection.Input, "float"),
-                new PortDefinition("B", PortDirection.Input, "float")
+                        new PortDefinition("A", PortDirection.Input, "float", 0f),
+                new PortDefinition("B", PortDirection.Input, "float", 0f)
                     ],
                     outputs:
                     [
@@ -110,8 +110,8 @@ namespace Nodevia.Demo
                     category: "Math",
                     inputs:
                     [
-                        new PortDefinition("Base", PortDirection.Input, "float"),
-                new PortDefinition("Exponent", PortDirection.Input, "float")
+                        new PortDefinition("Base", PortDirection.Input, "float", 0f),
+                new PortDefinition("Exponent", PortDirection.Input, "float", 0f)
                     ],
                     outputs:
                     [
@@ -125,7 +125,7 @@ namespace Nodevia.Demo
                     category: "Math",
                     inputs:
                     [
-                        new PortDefinition("Value", PortDirection.Input, "float")
+                        new PortDefinition("Value", PortDirection.Input, "float", 0f)
                     ],
                     outputs:
                     [
@@ -139,7 +139,7 @@ namespace Nodevia.Demo
                     category: "Math",
                     inputs:
                     [
-                        new PortDefinition("Value", PortDirection.Input, "float")
+                        new PortDefinition("Value", PortDirection.Input, "float", 0f)
                     ],
                     outputs:
                     [
@@ -153,7 +153,7 @@ namespace Nodevia.Demo
                     category: "Math",
                     inputs:
                     [
-                        new PortDefinition("Value", PortDirection.Input, "float")
+                        new PortDefinition("Value", PortDirection.Input, "float", 0f)
                     ],
                     outputs:
                     [
@@ -167,8 +167,8 @@ namespace Nodevia.Demo
                     category: "Math",
                     inputs:
                     [
-                        new PortDefinition("A", PortDirection.Input, "float"),
-                new PortDefinition("B", PortDirection.Input, "float")
+                        new PortDefinition("A", PortDirection.Input, "float", 0f),
+                new PortDefinition("B", PortDirection.Input, "float", 0f)
                     ],
                     outputs:
                     [
@@ -182,8 +182,8 @@ namespace Nodevia.Demo
                     category: "Math",
                     inputs:
                     [
-                        new PortDefinition("A", PortDirection.Input, "float"),
-                new PortDefinition("B", PortDirection.Input, "float")
+                        new PortDefinition("A", PortDirection.Input, "float", 0f),
+                new PortDefinition("B", PortDirection.Input, "float", 0f)
                     ],
                     outputs:
                     [
@@ -222,6 +222,25 @@ namespace Nodevia.Demo
                         new PortDefinition("Value", PortDirection.Input, "object")
                     ],
                     outputs: []));
+
+            _catalog.Register(
+                new NodeDefinition(
+                    id: "test.typeTest",
+                    title: "Testing DataTypes",
+                    category: "Type Test",
+                    inputs:
+                    [
+                        new PortDefinition("Target", PortDirection.Input, "none"),
+                        new PortDefinition("Yes/No?", PortDirection.Input, "bool", true),
+                        new PortDefinition("Name", PortDirection.Input, "string", "Whats your name?"),
+                        new PortDefinition("Age", PortDirection.Input, "int", "16"),
+                        new PortDefinition("Height", PortDirection.Input, "float", "5.6"),
+                        new PortDefinition("Operation", PortDirection.Input, "enum", "Add", new[] { "Add", "Subtract", "Multiply", "Divide" })
+                    ],
+                    outputs:
+                    [
+                        new PortDefinition("Output", PortDirection.Output, "string")
+                    ]));
         }
 
         private void AddDemoNodes()

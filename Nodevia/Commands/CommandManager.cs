@@ -55,5 +55,15 @@ public class CommandManager
 
         StateChanged?.Invoke(this, EventArgs.Empty);
     }
+
+    public void Push(INodeCommand command)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+
+        _undoStack.Push(command);
+        _redoStack.Clear();
+
+        StateChanged?.Invoke(this, EventArgs.Empty);
+    }
 }
 

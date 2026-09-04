@@ -49,11 +49,12 @@ namespace Nodevia.Models
             }
         }
 
-        public Port(string name, PortDirection direction, string dataType = "object")
+        public Port(string name, PortDirection direction, string dataType = "object", object? defaultValue = null)
         {
             _name = name;
             Direction = direction;
             _dataType = dataType;
+            _defaultValue = defaultValue;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -62,5 +63,22 @@ namespace Nodevia.Models
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        private object? _defaultValue;
+
+        public object? DefaultValue
+        {
+            get => _defaultValue;
+            set
+            {
+                if (Equals(_defaultValue, value))
+                    return;
+
+                _defaultValue = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public IReadOnlyList<string> EnumValues { get; internal set; } = [];
     }
 }

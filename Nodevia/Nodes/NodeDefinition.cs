@@ -25,6 +25,9 @@ public class NodeDefinition
         if (string.IsNullOrWhiteSpace(title))
             throw new ArgumentException("Node definition title cannot be empty.", nameof(title));
 
+        if (string.IsNullOrWhiteSpace(category))
+            throw new ArgumentException("Node definition category cannot be empty.", nameof(category));
+
         Id = id;
         Title = title;
         Category = category;
