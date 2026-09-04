@@ -1,4 +1,5 @@
-﻿using Nodevia.Models;
+﻿using Nodevia.Commands;
+using Nodevia.Models;
 using Nodevia.Rendering;
 using Nodevia.Routing;
 using System.Collections.Specialized;
@@ -15,6 +16,8 @@ namespace Nodevia.Controls;
 public class NodeCanvas : ItemsControl
 {
     public static readonly Size NodeVisualSize = new(180, 100); // temporary, until Node has real size
+    private readonly Commands.CommandManager _commandManager = new();
+    public Commands.CommandManager CommandManager => _commandManager;
 
     static NodeCanvas()
     {
@@ -27,6 +30,7 @@ public class NodeCanvas : ItemsControl
     {
         Graph = new NodeGraph();
         Focusable = true;
+        RegisterCommandBindings();
     }
 
     // ============================================================
@@ -471,30 +475,39 @@ public class NodeCanvas : ItemsControl
 
     public void BeginConnectionDrag(PortControl sourceControl)
     {
-        if (sourceControl.Port is null || _transformRoot is null)
-            return;
+        if (sourceControl.Port is null || _transformRoot is null) return;
 
         _isConnectingPort = true;
         _connectionSourceControl = sourceControl;
 
-        Point sourcePos = sourceControl.GetCenterRelativeTo(_transformRoot);
+        Point? sourcePos = sourceControl.GetCenterRelativeTo(_transformRoot);
+
+        if (sourcePos is null)
+        {
+            _isConnectingPort = false;
+            _connectionSourceControl = null;
+            return;
+        }
+
         PortSide side = sourceControl.Port.Direction == PortDirection.Output ? PortSide.Right : PortSide.Left;
 
-        _connectionLayer?.SetPreview(sourcePos, sourcePos, side);
+        _connectionLayer?.SetPreview(sourcePos.Value, sourcePos.Value, side);
 
         CaptureMouse();
     }
 
     private void UpdateConnectionPreview(MouseEventArgs e)
     {
-        if (_transformRoot is null || _connectionSourceControl?.Port is not Port sourcePort)
-            return;
+        if (_transformRoot is null || _connectionSourceControl?.Port is not Port sourcePort) return;
 
         Point current = e.GetPosition(_transformRoot);
-        Point sourcePos = _connectionSourceControl.GetCenterRelativeTo(_transformRoot);
+        Point? sourcePos = _connectionSourceControl.GetCenterRelativeTo(_transformRoot);
+
+        if (sourcePos is null) return;
+
         PortSide side = sourcePort.Direction == PortDirection.Output ? PortSide.Right : PortSide.Left;
 
-        _connectionLayer?.SetPreview(sourcePos, current, side);
+        _connectionLayer?.SetPreview(sourcePos.Value, current, side);
     }
 
     private void EndConnectionDrag(MouseButtonEventArgs e)
@@ -535,7 +548,9 @@ public class NodeCanvas : ItemsControl
 
         try
         {
-            Graph.Connect(output, input);
+            Connection connection = Graph.CreateConnection(output, input);
+
+            _commandManager.Execute(new AddConnectionCommand(Graph, connection));
         }
         catch (InvalidOperationException)
         {
@@ -641,42 +656,70 @@ public class NodeCanvas : ItemsControl
         CancelConnectionDrag();
     }
 
-    // ============================================================
-    // Keyboard shortcuts
-    // ============================================================
+    // ----------------------------------------------------------------
+    // Keyboard shortcuts (via RoutedCommands - see NodeCanvasCommands)
+    // ----------------------------------------------------------------
 
-    protected override void OnKeyDown(KeyEventArgs e)
+    private void RegisterCommandBindings()
     {
-        base.OnKeyDown(e);
+        CommandBindings.Add(new CommandBinding(
+            NodeCanvasCommands.DeleteSelection,
+            (_, _) => DeleteSelectedNodes(),
+            (_, e) => e.CanExecute = Graph.Nodes.Any(n => n.IsSelected) || Graph.Connections.Any(c => c.IsSelected)));
 
-        switch (e.Key)
-        {
-            case Key.Delete:
-                DeleteSelectedNodes();
-                e.Handled = true;
-                break;
+        CommandBindings.Add(new CommandBinding(
+            NodeCanvasCommands.SelectAll,
+            (_, _) => SelectAll(),
+            (_, e) => e.CanExecute = Graph.Nodes.Count > 0));
 
-            case Key.A when Keyboard.Modifiers.HasFlag(ModifierKeys.Control):
-                SelectAll();
-                e.Handled = true;
-                break;
+        CommandBindings.Add(new CommandBinding(
+            NodeCanvasCommands.CancelAction,
+            (_, _) => CancelActiveDrag()));
 
-            case Key.Escape:
-                CancelActiveDrag();
-                e.Handled = true;
-                break;
-        }
+        InputBindings.Add(new KeyBinding(NodeCanvasCommands.DeleteSelection, Key.Delete, ModifierKeys.None));
+        InputBindings.Add(new KeyBinding(NodeCanvasCommands.SelectAll, Key.A, ModifierKeys.Control));
+        InputBindings.Add(new KeyBinding(NodeCanvasCommands.CancelAction, Key.Escape, ModifierKeys.None));
+
+        /*
+            // Remove just the Delete gesture, keep everything else:
+            var deleteBinding = NodeCanvas.InputBindings.OfType<KeyBinding>()
+                .FirstOrDefault(kb => kb.Command == NodeCanvasCommands.DeleteSelection);
+
+            if (deleteBinding is not null) NodeCanvas.InputBindings.Remove(deleteBinding);
+
+            // Or rebind it to a different key entirely:
+            NodeCanvas.InputBindings.Add(new KeyBinding(NodeCanvasCommands.DeleteSelection, Key.Back, ModifierKeys.None));
+        */
     }
 
     private void DeleteSelectedNodes()
     {
         var nodesToRemove = Graph.Nodes.Where(n => n.IsSelected).ToList();
-        foreach (var node in nodesToRemove)
-            Graph.Nodes.Remove(node);
 
         var connectionsToRemove = Graph.Connections.Where(c => c.IsSelected).ToList();
+
+        if (nodesToRemove.Count == 0 && connectionsToRemove.Count == 0) return;
+
+        var command = new CompositeCommand("Delete");
+
+        foreach (var node in nodesToRemove)
+        {
+            command.Add(new DeleteNodeCommand(Graph, node));
+        }
+
         foreach (var connection in connectionsToRemove)
-            Graph.Disconnect(connection);
+        {
+            if (nodesToRemove.Any(node =>
+                ReferenceEquals(connection.Source.Owner, node) ||
+                ReferenceEquals(connection.Target.Owner, node)))
+            {
+                continue;
+            }
+
+            command.Add(new DeleteConnectionCommand(Graph, connection));
+        }
+
+        _commandManager.Execute(command);
     }
 
     private void SelectAll()

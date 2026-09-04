@@ -1,4 +1,5 @@
-﻿using Nodevia.Controls;
+﻿using Nodevia.Commands;
+using Nodevia.Controls;
 using Nodevia.Models;
 using Nodevia.Nodes;
 using Nodevia.UI;
@@ -223,24 +224,6 @@ namespace Nodevia.Demo
                     outputs: []));
         }
 
-        private void OnCanvasRightClick(object sender, MouseButtonEventArgs e)
-        {
-            Point screenPosition = e.GetPosition(NodeCanvas);
-
-            Point canvasPosition =
-                NodeCanvas.ScreenToCanvas(screenPosition);
-
-            var menu = NodeMenuBuilder.Build(
-                _catalog,
-                _factory,
-                NodeCanvas.Graph,
-                canvasPosition);
-
-            menu.IsOpen = true;
-
-            e.Handled = true;
-        }
-
         private void AddDemoNodes()
         {
             var addNode = _factory.Create(
@@ -255,9 +238,49 @@ namespace Nodevia.Demo
                 _catalog.Get("debug.print"),
                 new Point(450, 250));
 
-            NodeCanvas.Graph.Nodes.Add(addNode);
-            NodeCanvas.Graph.Nodes.Add(floatCNode);
-            NodeCanvas.Graph.Nodes.Add(printNode);
+            NodeCanvas.CommandManager.Execute(new AddNodeCommand(NodeCanvas.Graph, addNode));
+            NodeCanvas.CommandManager.Execute(new AddNodeCommand(NodeCanvas.Graph, floatCNode));
+            NodeCanvas.CommandManager.Execute(new AddNodeCommand(NodeCanvas.Graph, printNode));
+        }
+
+        protected override void OnPreviewKeyDown(KeyEventArgs e)
+        {
+            base.OnPreviewKeyDown(e);
+
+            if (Keyboard.Modifiers == ModifierKeys.Control &&
+                e.Key == Key.Z)
+            {
+                NodeCanvas.CommandManager.Undo();
+                e.Handled = true;
+                return;
+            }
+
+            if (Keyboard.Modifiers == ModifierKeys.Control &&
+                e.Key == Key.Y)
+            {
+                NodeCanvas.CommandManager.Redo();
+                e.Handled = true;
+                return;
+            }
+        }
+
+        private void OnCanvasRightClick(object sender, MouseButtonEventArgs e)
+        {
+            Point screenPosition = e.GetPosition(NodeCanvas);
+
+            Point canvasPosition =
+                NodeCanvas.ScreenToCanvas(screenPosition);
+
+            var menu = NodeMenuBuilder.Build(
+                _catalog,
+                _factory,
+                NodeCanvas.CommandManager,
+                NodeCanvas.Graph,
+                canvasPosition);
+
+            menu.IsOpen = true;
+
+            e.Handled = true;
         }
 
         private void New_Click(object sender, RoutedEventArgs e)

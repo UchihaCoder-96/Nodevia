@@ -1,7 +1,8 @@
-﻿using System.Windows;
-using System.Windows.Controls;
+﻿using Nodevia.Commands;
 using Nodevia.Models;
 using Nodevia.Nodes;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace Nodevia.UI;
 
@@ -10,6 +11,7 @@ public static class NodeMenuBuilder
     public static ContextMenu Build(
         NodeCatalog catalog,
         NodeFactory factory,
+        Nodevia.Commands.CommandManager commandManager,
         NodeGraph graph,
         Point canvasPosition)
     {
@@ -32,11 +34,9 @@ public static class NodeMenuBuilder
 
                 nodeItem.Click += (_, _) =>
                 {
-                    Node node = factory.Create(
-                        definition,
-                        canvasPosition);
+                    Node node = factory.Create(definition, canvasPosition);
 
-                    graph.Nodes.Add(node);
+                    commandManager.Execute(new AddNodeCommand(graph, node));
                 };
 
                 categoryItem.Items.Add(nodeItem);

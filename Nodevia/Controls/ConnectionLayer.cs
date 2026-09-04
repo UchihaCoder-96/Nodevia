@@ -77,13 +77,15 @@ public class ConnectionLayer : FrameworkElement
             PortControl? sourceControl = PortControlLookup(connection.Source);
             PortControl? targetControl = PortControlLookup(connection.Target);
 
-            if (sourceControl is null || targetControl is null)
-                continue;
+            if (sourceControl is null || targetControl is null) continue;
 
-            Point start = sourceControl.GetCenterRelativeTo(PositionRoot);
-            Point end = targetControl.GetCenterRelativeTo(PositionRoot);
+            Point? start = sourceControl.GetCenterRelativeTo(PositionRoot);
+            Point? end = targetControl.GetCenterRelativeTo(PositionRoot);
 
-            Geometry geometry = Route.BuildGeometry(start, end, PortSide.Right, PortSide.Left);
+            if (start is null || end is null) continue;
+
+            Geometry geometry = Route.BuildGeometry(start.Value, end.Value, PortSide.Right, PortSide.Left);
+
             _connectionGeometries[connection] = geometry;
 
             Pen pen = connection.IsSelected ? SelectedConnectionPen : ConnectionPen;

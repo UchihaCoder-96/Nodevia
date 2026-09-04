@@ -28,10 +28,22 @@ public class PortControl : Control
         set => SetValue(PortProperty, value);
     }
 
-    public Point GetCenterRelativeTo(Visual ancestor)
+    public Point? GetCenterRelativeTo(FrameworkElement ancestor)
     {
-        var transform = TransformToAncestor(ancestor);
-        return transform.Transform(new Point(ActualWidth / 2, ActualHeight / 2));
+        if (!IsLoaded || !ancestor.IsLoaded)
+            return null;
+
+        try
+        {
+            var transform = TransformToAncestor(ancestor);
+
+            return transform.Transform(
+                new Point(ActualWidth / 2, ActualHeight / 2));
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
     }
 
     protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)

@@ -18,21 +18,30 @@ namespace Nodevia.Models
 
         public Connection Connect(Port source, Port target)
         {
-            if (source.Direction != PortDirection.Output)
-                throw new ArgumentException("Source must be an Output port.", nameof(source));
-
-            if (target.Direction != PortDirection.Input)
-                throw new ArgumentException("Target must be an Input port.", nameof(target));
-
-            if (ReferenceEquals(source.Owner, target.Owner))
-                throw new InvalidOperationException("Cannot connect a node to itself.");
-
-            if (Connections.Any(c => c.Target == target))
-                throw new InvalidOperationException("Target port already has a connection."); // Single connection per input port.
-
-            var connection = new Connection(source, target);
+            var connection = CreateConnection(source, target);
             Connections.Add(connection);
             return connection;
+        }
+
+        public Connection CreateConnection(Port source, Port target)
+        {
+            if (source.Direction != PortDirection.Output)
+                throw new ArgumentException(
+                    "Source must be an Output port.", nameof(source));
+
+            if (target.Direction != PortDirection.Input)
+                throw new ArgumentException(
+                    "Target must be an Input port.", nameof(target));
+
+            if (ReferenceEquals(source.Owner, target.Owner))
+                throw new InvalidOperationException(
+                    "Cannot connect a node to itself.");
+
+            if (Connections.Any(c => c.Target == target))
+                throw new InvalidOperationException(
+                    "Target port already has a connection.");
+
+            return new Connection(source, target);
         }
 
         public void Disconnect(Connection connection) => Connections.Remove(connection);
