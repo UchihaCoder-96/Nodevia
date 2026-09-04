@@ -494,33 +494,6 @@ public class NodeCanvas : ItemsControl
 
     private ConnectionLayer? _connectionLayer;
 
-    private PortControl? FindPortControl(Port port)
-    {
-        if (_transformRoot is null)
-            return null;
-
-        // Simple approach for now — fine at typical node graph scale;
-        // worth revisiting with a Dictionary<Port, PortControl> cache if graphs get large.
-        return FindPortControlRecursive(_transformRoot, port);
-    }
-
-    private static PortControl? FindPortControlRecursive(DependencyObject parent, Port target)
-    {
-        int count = VisualTreeHelper.GetChildrenCount(parent);
-        for (int i = 0; i < count; i++)
-        {
-            var child = VisualTreeHelper.GetChild(parent, i);
-
-            if (child is PortControl pc && ReferenceEquals(pc.Port, target))
-                return pc;
-
-            var found = FindPortControlRecursive(child, target);
-            if (found is not null)
-                return found;
-        }
-        return null;
-    }
-
     public static readonly DependencyProperty RouteProperty =
     DependencyProperty.Register(nameof(Route), typeof(ConnectionRoute), typeof(NodeCanvas),
         new FrameworkPropertyMetadata(new BezierConnectionRoute(), OnRouteChanged));
@@ -556,5 +529,22 @@ public class NodeCanvas : ItemsControl
 
         CaptureMouse();
     }
+
+    private readonly Dictionary<Port, PortControl> _portControlsByPort = new();
+
+    public void RegisterPortControl(PortControl control)
+    {
+        if (control.Port is not null)
+            _portControlsByPort[control.Port] = control;
+    }
+
+    public void UnregisterPortControl(PortControl control)
+    {
+        if (control.Port is not null && _portControlsByPort.TryGetValue(control.Port, out var existing) && ReferenceEquals(existing, control))
+            _portControlsByPort.Remove(control.Port);
+    }
+
+    private PortControl? FindPortControl(Port port) =>
+        _portControlsByPort.TryGetValue(port, out var control) ? control : null;
 }
 

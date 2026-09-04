@@ -60,5 +60,21 @@ public class PortControl : Control
         }
         return null;
     }
+
+    public PortControl()
+    {
+        Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
+    }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        FindAncestor<NodeCanvas>(this)?.RegisterPortControl(this);
+    }
+
+    private void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        FindAncestor<NodeCanvas>(this)?.UnregisterPortControl(this);
+    }
 }
 
