@@ -1,4 +1,5 @@
 ﻿using Nodevia.Models;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -16,13 +17,47 @@ public class NodeControl : Control
     }
 
     public static readonly DependencyProperty NodeProperty =
-        DependencyProperty.Register(nameof(Node), typeof(Node), typeof(NodeControl),
-            new FrameworkPropertyMetadata(null));
+    DependencyProperty.Register(nameof(Node), typeof(Node), typeof(NodeControl),
+        new FrameworkPropertyMetadata(null, OnNodeChanged));
 
     public Node? Node
     {
         get => (Node?)GetValue(NodeProperty);
         set => SetValue(NodeProperty, value);
+    }
+
+    public static readonly DependencyProperty IsNodeSelectedProperty =
+    DependencyProperty.Register(nameof(IsNodeSelected), typeof(bool), typeof(NodeControl),
+        new FrameworkPropertyMetadata(false));
+
+    public bool IsNodeSelected
+    {
+        get => (bool)GetValue(IsNodeSelectedProperty);
+        private set => SetValue(IsNodeSelectedProperty, value);
+    }
+
+    private static void OnNodeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var control = (NodeControl)d;
+
+        if (e.OldValue is Node oldNode)
+            oldNode.PropertyChanged -= control.OnNodePropertyChanged;
+
+        if (e.NewValue is Node newNode)
+        {
+            newNode.PropertyChanged += control.OnNodePropertyChanged;
+            control.IsNodeSelected = newNode.IsSelected;
+        }
+        else
+        {
+            control.IsNodeSelected = false;
+        }
+    }
+
+    private void OnNodePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(Node.IsSelected) && Node is not null)
+            IsNodeSelected = Node.IsSelected;
     }
 
     private Canvas? _canvas;
@@ -49,11 +84,19 @@ public class NodeControl : Control
         _ownerCanvas.BringToFront(Node);
 
         bool ctrl = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
+
         if (ctrl)
+        {
             _ownerCanvas.ToggleSelection(Node);
-        else if (!Node.IsSelected)
-            _ownerCanvas.SelectOnly(Node);
-        // else: already selected, no ctrl -> keep selection so the whole group can drag
+        }
+        else
+        {
+            _ownerCanvas.ClearConnectionSelection();
+
+            if (!Node.IsSelected)
+                _ownerCanvas.SelectOnly(Node);
+            // else: already selected, no ctrl -> keep selection so the whole group can drag
+        }
 
         _dragStartMouseCanvas = e.GetPosition(_canvas);
         _dragStartPositions.Clear();
@@ -118,5 +161,7 @@ public class NodeControl : Control
         }
         return null;
     }
+
+
 }
 

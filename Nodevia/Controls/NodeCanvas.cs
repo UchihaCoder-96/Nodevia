@@ -26,6 +26,7 @@ public class NodeCanvas : ItemsControl
     public NodeCanvas()
     {
         Graph = new NodeGraph();
+        Focusable = true;
     }
 
     // ============================================================
@@ -328,6 +329,11 @@ public class NodeCanvas : ItemsControl
         {
             foreach (var n in Graph.Nodes)
                 n.IsSelected = false;
+
+            foreach (var c in Graph.Connections)
+                c.IsSelected = false;
+
+            InvalidateConnections();
         }
 
         CaptureMouse();
@@ -545,10 +551,32 @@ public class NodeCanvas : ItemsControl
                 break;
 
             case MouseButton.Left:
-                if (!e.Handled) // a node or port already handled its own click
-                    BeginSelection(e);
+                if (!e.Handled)
+                {
+                    Connection? hitConnection = _transformRoot is not null
+                        ? _connectionLayer?.HitTestConnection(e.GetPosition(_transformRoot))
+                        : null;
+
+                    if (hitConnection is not null)
+                    {
+                        HandleConnectionClick(hitConnection);
+                        e.Handled = true;
+                    }
+                    else
+                    {
+                        BeginSelection(e);
+                    }
+                }
                 break;
         }
+    }
+
+    protected override void OnPreviewMouseDown(MouseButtonEventArgs e)
+    {
+        base.OnPreviewMouseDown(e);
+
+        if (!IsKeyboardFocused)
+            Focus();
     }
 
     protected override void OnMouseMove(MouseEventArgs e)
@@ -594,6 +622,111 @@ public class NodeCanvas : ItemsControl
         EndPan();
         EndSelection();
         CancelConnectionDrag();
+    }
+
+    // ============================================================
+    // Keyboard shortcuts
+    // ============================================================
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+
+        switch (e.Key)
+        {
+            case Key.Delete:
+                DeleteSelectedNodes();
+                e.Handled = true;
+                break;
+
+            case Key.A when Keyboard.Modifiers.HasFlag(ModifierKeys.Control):
+                SelectAll();
+                e.Handled = true;
+                break;
+
+            case Key.Escape:
+                CancelActiveDrag();
+                e.Handled = true;
+                break;
+        }
+    }
+
+    private void DeleteSelectedNodes()
+    {
+        var nodesToRemove = Graph.Nodes.Where(n => n.IsSelected).ToList();
+        foreach (var node in nodesToRemove)
+            Graph.Nodes.Remove(node);
+
+        var connectionsToRemove = Graph.Connections.Where(c => c.IsSelected).ToList();
+        foreach (var connection in connectionsToRemove)
+            Graph.Disconnect(connection);
+    }
+
+    private void SelectAll()
+    {
+        foreach (var n in Graph.Nodes)
+            n.IsSelected = true;
+    }
+
+    private void CancelActiveDrag()
+    {
+        if (_isConnectingPort)
+        {
+            CancelConnectionDrag();
+            ReleaseMouseCapture();
+            return;
+        }
+
+        if (_isSelecting)
+        {
+            EndSelection();
+            return;
+        }
+
+        if (_isPanning)
+        {
+            EndPan();
+        }
+    }
+
+    // ----------------------------------------
+    // Connection Selection API
+    // ----------------------------------------
+
+    public IEnumerable<Connection> SelectedConnections => Graph.Connections.Where(c => c.IsSelected);
+
+    private void HandleConnectionClick(Connection connection)
+    {
+        bool additive = Keyboard.Modifiers.HasFlag(ModifierKeys.Control) ||
+                         Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
+
+        if (additive)
+        {
+            connection.IsSelected = !connection.IsSelected;
+        }
+        else
+        {
+            foreach (var c in Graph.Connections)
+                c.IsSelected = ReferenceEquals(c, connection);
+        }
+
+        InvalidateConnections();
+    }
+
+    public void ClearConnectionSelection()
+    {
+        bool anySelected = false;
+
+        foreach (var c in Graph.Connections)
+        {
+            if (c.IsSelected)
+                anySelected = true;
+
+            c.IsSelected = false;
+        }
+
+        if (anySelected)
+            InvalidateConnections();
     }
 }
 

@@ -43,9 +43,31 @@ public class ConnectionLayer : FrameworkElement
         ((ConnectionLayer)d).InvalidateVisual();
     }
 
+    private readonly Dictionary<Connection, Geometry> _connectionGeometries = new();
+
+    private static readonly Pen SelectedConnectionPen = CreateSelectedPen();
+    private static readonly Pen HitTestPen = CreateHitTestPen();
+
+    private static Pen CreateSelectedPen()
+    {
+        var pen = new Pen(new SolidColorBrush(Color.FromRgb(0x00, 0xAE, 0xFF)), 3.0);
+        pen.Freeze();
+        return pen;
+    }
+
+    private static Pen CreateHitTestPen()
+    {
+        // clicking near a curve, not exactly on it, still counts.
+        var pen = new Pen(Brushes.Black, 10.0);
+        pen.Freeze();
+        return pen;
+    }
+
     protected override void OnRender(DrawingContext dc)
     {
         base.OnRender(dc);
+
+        _connectionGeometries.Clear();
 
         if (Graph is null || Route is null || PositionRoot is null || PortControlLookup is null)
             return;
@@ -62,14 +84,27 @@ public class ConnectionLayer : FrameworkElement
             Point end = targetControl.GetCenterRelativeTo(PositionRoot);
 
             Geometry geometry = Route.BuildGeometry(start, end, PortSide.Right, PortSide.Left);
-            dc.DrawGeometry(null, ConnectionPen, geometry);
+            _connectionGeometries[connection] = geometry;
+
+            Pen pen = connection.IsSelected ? SelectedConnectionPen : ConnectionPen;
+            dc.DrawGeometry(null, pen, geometry);
         }
 
-        if (_previewStart is Point _start && _previewEnd is Point _end && Route is not null)
+        if (_previewStart is Point _Start && _previewEnd is Point _End && Route is not null)
         {
-            Geometry previewGeometry = Route.BuildGeometry(_start, _end, _previewStartSide, Opposite(_previewStartSide));
+            Geometry previewGeometry = Route.BuildGeometry(_Start, _End, _previewStartSide, Opposite(_previewStartSide));
             dc.DrawGeometry(null, PreviewPen, previewGeometry);
         }
+    }
+
+    public Connection? HitTestConnection(Point point)
+    {
+        foreach (var kvp in _connectionGeometries)
+        {
+            if (kvp.Value.StrokeContains(HitTestPen, point))
+                return kvp.Key;
+        }
+        return null;
     }
 
     private Point? _previewStart;

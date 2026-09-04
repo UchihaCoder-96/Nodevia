@@ -11,6 +11,8 @@ namespace Nodevia.Models
         public Port Source { get; }
         public Port Target { get; }
 
+        public bool IsSelected { get; set; }
+
         public Connection(Port source, Port target)
         {
             if (source.Direction != PortDirection.Output)

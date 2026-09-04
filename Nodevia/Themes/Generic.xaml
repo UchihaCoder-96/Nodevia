@@ -12,6 +12,8 @@
 
         <Setter Property="Width" Value="180"/>
         <Setter Property="Height" Value="100"/>
+        <Setter Property="BorderBrush" Value="Black"/>
+        <Setter Property="BorderThickness" Value="2"/>
 
         <Setter Property="Template">
             <Setter.Value>
@@ -20,8 +22,8 @@
                     <Border
                     x:Name="PART_Border"
                     Background="Gray"
-                    BorderBrush="Black"
-                    BorderThickness="2"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
                     CornerRadius="6">
 
                         <Grid>
@@ -87,12 +89,15 @@
                     </Border>
 
                     <ControlTemplate.Triggers>
-                        <DataTrigger
-                        Binding="{Binding Node.IsSelected, RelativeSource={RelativeSource TemplatedParent}}"
-                        Value="True">
+                        <Trigger Property="IsNodeSelected" Value="True">
                             <Setter TargetName="PART_Border" Property="BorderBrush" Value="#FF00AEFF"/>
                             <Setter TargetName="PART_Border" Property="BorderThickness" Value="3"/>
-                        </DataTrigger>
+                            <Setter TargetName="PART_Border" Property="Effect">
+                                <Setter.Value>
+                                    <DropShadowEffect Color="#9900AEFF" BlurRadius="16" ShadowDepth="0" Opacity="0.8"/>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
                     </ControlTemplate.Triggers>
 
                 </ControlTemplate>
