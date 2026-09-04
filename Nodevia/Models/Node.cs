@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -67,6 +69,38 @@ public class Node : INotifyPropertyChanged
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
+    public ObservableCollection<Port> InputPorts { get; } = new();
+    public ObservableCollection<Port> OutputPorts { get; } = new();
+
+    public Node()
+    {
+        InputPorts.CollectionChanged += (_, e) => OnPortsChanged(e, PortDirection.Input);
+        OutputPorts.CollectionChanged += (_, e) => OnPortsChanged(e, PortDirection.Output);
+    }
+
+    private void OnPortsChanged(NotifyCollectionChangedEventArgs e, PortDirection expected)
+    {
+        if (e.NewItems is not null)
+        {
+            foreach (Port port in e.NewItems)
+            {
+                if (port.Direction != expected)
+                    throw new InvalidOperationException(
+                        $"Cannot add a {port.Direction} port to {expected}Ports.");
+
+                port.Owner = this;
+            }
+        }
+
+        if (e.OldItems is not null)
+        {
+            foreach (Port port in e.OldItems)
+            {
+                if (ReferenceEquals(port.Owner, this))
+                    port.Owner = null;
+            }
+        }
+    }
 
     protected virtual void OnPropertyChanged(
         [CallerMemberName] string? propertyName = null)
