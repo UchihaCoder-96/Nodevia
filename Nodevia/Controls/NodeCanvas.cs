@@ -607,8 +607,26 @@ public class NodeCanvas : ItemsControl
     {
         base.OnPreviewMouseDown(e);
 
+        if (e.OriginalSource is DependencyObject source && IsInsideValueEditor(source))
+            return; // let the editor (including an open dropdown) keep/receive its own focus
+
         if (!IsKeyboardFocused)
             Focus();
+    }
+
+    private static bool IsInsideValueEditor(DependencyObject start)
+    {
+        DependencyObject? current = start;
+
+        while (current is not null)
+        {
+            if (current is TextBox or CheckBox or ComboBox)
+                return true;
+
+            current = LogicalTreeHelper.GetParent(current) ?? VisualTreeHelper.GetParent(current);
+        }
+
+        return false;
     }
 
     protected override void OnMouseMove(MouseEventArgs e)
@@ -787,6 +805,23 @@ public class NodeCanvas : ItemsControl
 
         if (anySelected)
             InvalidateConnections();
+    }
+
+    // ============================================================
+    // Value editor selection (pluggable, defaults to resource-key convention)
+    // ============================================================
+
+    public static readonly DependencyProperty ValueEditorSelectorProperty =
+        DependencyProperty.Register(
+            nameof(ValueEditorSelector),
+            typeof(DataTemplateSelector),
+            typeof(NodeCanvas),
+            new FrameworkPropertyMetadata(new PortValueTemplateSelector()));
+
+    public DataTemplateSelector ValueEditorSelector
+    {
+        get => (DataTemplateSelector)GetValue(ValueEditorSelectorProperty);
+        set => SetValue(ValueEditorSelectorProperty, value);
     }
 }
 

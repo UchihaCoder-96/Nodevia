@@ -14,6 +14,29 @@ namespace Nodevia.Models
         public NodeGraph()
         {
             Nodes.CollectionChanged += OnNodesChanged;
+            Connections.CollectionChanged += OnConnectionsChanged;
+        }
+
+        private void OnConnectionsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            var affectedPorts = new HashSet<Port>();
+
+            if (e.OldItems is not null)
+                foreach (Connection c in e.OldItems)
+                {
+                    affectedPorts.Add(c.Source);
+                    affectedPorts.Add(c.Target);
+                }
+
+            if (e.NewItems is not null)
+                foreach (Connection c in e.NewItems)
+                {
+                    affectedPorts.Add(c.Source);
+                    affectedPorts.Add(c.Target);
+                }
+
+            foreach (var port in affectedPorts)
+                port.IsConnected = Connections.Any(c => c.Source == port || c.Target == port);
         }
 
         public Connection CreateConnection(Port source, Port target)

@@ -79,6 +79,21 @@ namespace Nodevia.Models
             }
         }
 
+        private bool _isConnected;
+        public bool IsConnected
+        {
+            get => _isConnected;
+            internal set
+            {
+                if (_isConnected == value)
+                    return;
+
+                _isConnected = value;
+                OnPropertyChanged();
+            }
+        }
+
         public IReadOnlyList<string> EnumValues { get; internal set; } = [];
+        public IReadOnlyDictionary<string, object> Metadata { get; internal set; } = new Dictionary<string, object>();
     }
 }

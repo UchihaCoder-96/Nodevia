@@ -3,7 +3,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:Nodevia.Controls"
     xmlns:model="clr-namespace:Nodevia.Models"
-    xmlns:editors="clr-namespace:Nodevia.Controls.ValueEditors">
+    xmlns:editors="clr-namespace:Nodevia.Controls.ValueEditors"
+    xmlns:converters="clr-namespace:Nodevia.Converters">
     
     <!-- ============================================================
      NodeControl
@@ -11,30 +12,6 @@
 
     <Style TargetType="{x:Type local:NodeControl}">
         <Style.Resources>
-            <DataTemplate x:Key="PortValueTemplate.float">
-                <TextBox
-    Width="50"
-    Height="22"
-    Margin="5,0,0,0"
-    Padding="3,0"
-    VerticalContentAlignment="Center"
-    Text="{Binding DefaultValue,
-        Mode=TwoWay,
-        UpdateSourceTrigger=LostFocus}"/>
-            </DataTemplate>
-
-            <DataTemplate x:Key="PortValueTemplate.int">
-                <TextBox
-    Width="50"
-    Height="22"
-    Margin="5,0,0,0"
-    Padding="3,0"
-    VerticalContentAlignment="Center"
-    Text="{Binding DefaultValue,
-        Mode=TwoWay,
-        UpdateSourceTrigger=LostFocus}"/>
-            </DataTemplate>
-
             <DataTemplate x:Key="PortValueTemplate.bool">
                 <CheckBox
     Margin="5,0,0,0"
@@ -69,7 +46,7 @@
 
             <DataTemplate x:Key="PortValueTemplate.enum">
                 <ComboBox
-    Width="70"
+    Width="60"
     Height="22"
     Margin="5,0,0,0"
     VerticalContentAlignment="Center"
@@ -91,8 +68,143 @@
             <DataTemplate x:Key="PortValueTemplate.none">
                 <editors:NoneValueEditor Port="{Binding}"/>
             </DataTemplate>
+            
+            <!-- SliderValueEditor -->
+            <converters:ObjectToDoubleConverter x:Key="ObjectToDoubleConverter"/>
+            <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
 
-            <local:PortValueTemplateSelector x:Key="PortValueTemplateSelector"/>
+            <Style TargetType="{x:Type editors:SliderValueEditor}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type editors:SliderValueEditor}">
+                            <Grid Width="120">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="34"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Slider
+    Grid.Column="0"
+    VerticalAlignment="Center"
+    Minimum="{Binding Min, RelativeSource={RelativeSource TemplatedParent}}"
+    Maximum="{Binding Max, RelativeSource={RelativeSource TemplatedParent}}"
+    SmallChange="{Binding Step, RelativeSource={RelativeSource TemplatedParent}}"
+    TickFrequency="{Binding Step, RelativeSource={RelativeSource TemplatedParent}}"
+    IsSnapToTickEnabled="True"
+    Value="{Binding Value, RelativeSource={RelativeSource TemplatedParent},
+        Converter={StaticResource ObjectToDoubleConverter}, Mode=TwoWay}"/>
+
+                                <TextBlock
+                        Grid.Column="1"
+                        Margin="4,0,0,0"
+                        FontSize="9"
+                        Foreground="#FFD0D0D8"
+                        VerticalAlignment="Center"
+                        TextAlignment="Right"
+                        TextTrimming="CharacterEllipsis"
+                        Text="{Binding Value, RelativeSource={RelativeSource TemplatedParent}, StringFormat={}{0:0.##}}"/>
+
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            
+            <!-- Vec2Editor -->
+            <Style TargetType="{x:Type editors:Vec2ValueEditor}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type editors:Vec2ValueEditor}">
+                            <StackPanel Orientation="Horizontal">
+
+                                <TextBox
+                        Width="40"
+                        Height="22"
+                        Padding="3,0"
+                        VerticalContentAlignment="Center"
+                        Text="{Binding X, RelativeSource={RelativeSource TemplatedParent},
+                            UpdateSourceTrigger=LostFocus}"/>
+
+                                <TextBox
+                        Width="40"
+                        Height="22"
+                        Margin="3,0,0,0"
+                        Padding="3,0"
+                        VerticalContentAlignment="Center"
+                        Text="{Binding Y, RelativeSource={RelativeSource TemplatedParent},
+                            UpdateSourceTrigger=LostFocus}"/>
+
+                            </StackPanel>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            
+            <!-- NumericUpDownEditor -->
+            <Style TargetType="{x:Type editors:NumericUpDownValueEditor}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type editors:NumericUpDownValueEditor}">
+                            <Grid Width="64" Height="22">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="16"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBox
+                        x:Name="PART_TextBox"
+                        Grid.Column="0"
+                        Padding="3,0"
+                        VerticalContentAlignment="Center"
+                        Text="{Binding Number, RelativeSource={RelativeSource TemplatedParent},
+                            UpdateSourceTrigger=LostFocus, StringFormat={}{0:0.###}}"/>
+
+                                <Grid Grid.Column="1">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <RepeatButton
+                            x:Name="PART_UpButton"
+                            Grid.Row="0"
+                            Content="▲"
+                            FontSize="6"
+                            Padding="0"
+                            Focusable="False"/>
+
+                                    <RepeatButton
+                            x:Name="PART_DownButton"
+                            Grid.Row="1"
+                            Content="▼"
+                            FontSize="6"
+                            Padding="0"
+                            Focusable="False"/>
+
+                                </Grid>
+
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <DataTemplate x:Key="PortValueTemplate.int">
+                <editors:NumericUpDownValueEditor Port="{Binding}" IsInteger="True"/>
+            </DataTemplate>
+
+            <DataTemplate x:Key="PortValueTemplate.float">
+                <editors:NumericUpDownValueEditor Port="{Binding}"/>
+            </DataTemplate>
+
+            <DataTemplate x:Key="PortValueTemplate.vec2">
+                <editors:Vec2ValueEditor Port="{Binding}"/>
+            </DataTemplate>
+
+            <DataTemplate x:Key="PortValueTemplate.slider">
+                <editors:SliderValueEditor Port="{Binding}"/>
+            </DataTemplate>
+
         </Style.Resources>
         <Setter Property="Width" Value="220"/>
         <Setter Property="BorderBrush" Value="#FF333344"/>
@@ -184,7 +296,8 @@
                                             <StackPanel
         Orientation="Horizontal"
         VerticalAlignment="Center"
-        Margin="0,3">
+        Margin="0,3"
+        ToolTip="{Binding DataType}">
 
                                                 <!-- Socket -->
                                                 <local:PortControl
@@ -193,8 +306,9 @@
 
                                                 <!-- Value editor -->
                                                 <ContentControl
-            Content="{Binding}"
-            ContentTemplateSelector="{StaticResource PortValueTemplateSelector}"/>
+    Content="{Binding}"
+    IsEnabled="{Binding IsConnected, Converter={StaticResource InverseBooleanConverter}}"
+    ContentTemplateSelector="{Binding ValueEditorSelector, RelativeSource={RelativeSource AncestorType={x:Type local:NodeCanvas}}}"/>
 
                                                 <!-- Name -->
                                                 <TextBlock
@@ -203,14 +317,6 @@
             FontSize="11"
             VerticalAlignment="Center"
             Margin="5,0,0,0"/>
-
-                                                <!-- Type -->
-                                                <TextBlock
-            Text="{Binding DataType,
-                StringFormat='  ({0})'}"
-            Foreground="#FF777783"
-            FontSize="9"
-            VerticalAlignment="Center"/>
 
                                             </StackPanel>
 
@@ -246,20 +352,13 @@
                                             <StackPanel
                                                 Orientation="Horizontal"
                                                 VerticalAlignment="Center"
-                                                Margin="0,3">
+                                                Margin="0,3"
+                                                ToolTip="{Binding DataType}">
 
                                                 <TextBlock
                                                     Text="{Binding Name}"
                                                     Foreground="#FFD0D0D8"
                                                     FontSize="11"
-                                                    VerticalAlignment="Center"
-                                                    HorizontalAlignment="Right"/>
-
-                                                <TextBlock
-                                                    Text="{Binding DataType,
-                                                        StringFormat='  ({0})'}"
-                                                    Foreground="#FF777783"
-                                                    FontSize="9"
                                                     VerticalAlignment="Center"
                                                     HorizontalAlignment="Right"/>
 

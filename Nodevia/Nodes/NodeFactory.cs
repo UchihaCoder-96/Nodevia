@@ -24,6 +24,7 @@ public class NodeFactory
                 port.DefaultValue);
 
             nodePort.EnumValues = port.EnumValues;
+            nodePort.Metadata = port.Metadata;
 
             node.InputPorts.Add(nodePort);
         }
@@ -37,6 +38,7 @@ public class NodeFactory
                 port.DefaultValue);
 
             nodePort.EnumValues = port.EnumValues;
+            nodePort.Metadata = port.Metadata;
 
             node.OutputPorts.Add(nodePort);
         }

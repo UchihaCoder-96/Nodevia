@@ -1,4 +1,5 @@
 ﻿using Nodevia.Models;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -20,12 +21,36 @@ public class PortControl : Control
             nameof(Port),
             typeof(Port),
             typeof(PortControl),
-            new FrameworkPropertyMetadata(null));
+            new FrameworkPropertyMetadata(null, OnPortChanged));
 
     public Port? Port
     {
         get => (Port?)GetValue(PortProperty);
         set => SetValue(PortProperty, value);
+    }
+
+    private static void OnPortChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var control = (PortControl)d;
+
+        if (e.OldValue is Port oldPort)
+            oldPort.PropertyChanged -= control.OnPortPropertyChanged;
+
+        if (e.NewValue is Port newPort)
+        {
+            newPort.PropertyChanged += control.OnPortPropertyChanged;
+            control.IsConnected = newPort.IsConnected;
+        }
+        else
+        {
+            control.IsConnected = false;
+        }
+    }
+
+    private void OnPortPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(Models.Port.IsConnected) && Port is not null)
+            IsConnected = Port.IsConnected;
     }
 
     public bool HasDefaultValue => Port?.Direction == PortDirection.Input && Port.DefaultValue is not null;
@@ -102,19 +127,6 @@ public class PortControl : Control
     {
         get => (bool)GetValue(IsConnectedProperty);
         set => SetValue(IsConnectedProperty, value);
-    }
-
-    public static readonly DependencyProperty IsHoveredProperty =
-        DependencyProperty.Register(
-            nameof(IsHovered),
-            typeof(bool),
-            typeof(PortControl),
-            new FrameworkPropertyMetadata(false));
-
-    public bool IsHovered
-    {
-        get => (bool)GetValue(IsHoveredProperty);
-        set => SetValue(IsHoveredProperty, value);
     }
 }
 

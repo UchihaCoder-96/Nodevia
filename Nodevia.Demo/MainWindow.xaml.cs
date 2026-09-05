@@ -233,9 +233,11 @@ namespace Nodevia.Demo
                         new PortDefinition("Target", PortDirection.Input, "none"),
                         new PortDefinition("Yes/No?", PortDirection.Input, "bool", true),
                         new PortDefinition("Name", PortDirection.Input, "string", "Whats your name?"),
-                        new PortDefinition("Age", PortDirection.Input, "int", "16"),
-                        new PortDefinition("Height", PortDirection.Input, "float", "5.6"),
-                        new PortDefinition("Operation", PortDirection.Input, "enum", "Add", new[] { "Add", "Subtract", "Multiply", "Divide" })
+                        new PortDefinition("Age", PortDirection.Input, "int", defaultValue: 16, metadata: NumericPortOptions.Create(min: 0, max: 120, step: 1, isInteger: true)),
+                        new PortDefinition("Height", PortDirection.Input, "float", defaultValue: 5.6, metadata: NumericPortOptions.Create(min: 0, max: 10, step: 0.1)),
+                        new PortDefinition("Operation", PortDirection.Input, "enum", "Add", new[] { "Add", "Subtract", "Multiply", "Divide" }),
+                        new PortDefinition("Volume", PortDirection.Input, "slider", defaultValue: 0, metadata: SliderPortOptions.Create(min: -5, max: 5, step: 1)),
+                        new PortDefinition("Position", PortDirection.Input, "vec2", defaultValue: new Vec2(0, 0))
                     ],
                     outputs:
                     [

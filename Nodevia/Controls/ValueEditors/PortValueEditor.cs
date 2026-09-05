@@ -36,6 +36,7 @@ public abstract class PortValueEditor : Control
     // Guards against Port -> Value -> Port feedback while syncing.
     private bool _isSyncing;
 
+
     private static void OnPortChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var editor = (PortValueEditor)d;
@@ -48,6 +49,8 @@ public abstract class PortValueEditor : Control
             newPort.PropertyChanged += editor.OnPortPropertyChanged;
             editor.SyncValueFromPort(newPort);
         }
+
+        editor.OnPortAttached(e.NewValue as Port);
     }
 
     private void OnPortPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -61,6 +64,8 @@ public abstract class PortValueEditor : Control
         _isSyncing = true;
         Value = port.DefaultValue;
         _isSyncing = false;
+
+        OnValueChanged();
     }
 
     private static void OnValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -71,6 +76,11 @@ public abstract class PortValueEditor : Control
             return;
 
         editor.Port.DefaultValue = e.NewValue;
+        editor.OnValueChanged();
     }
+
+    protected virtual void OnPortAttached(Port? port) { }
+
+    protected virtual void OnValueChanged() { }
 }
 
