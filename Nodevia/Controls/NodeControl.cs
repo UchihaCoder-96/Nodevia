@@ -1,4 +1,5 @@
 ﻿using Nodevia.Commands;
+using Nodevia.Controls.ValueEditors;
 using Nodevia.Models;
 using System.ComponentModel;
 using System.Windows;
@@ -74,9 +75,9 @@ public class NodeControl : Control
         if (e.Handled) // a child PortControl already started a connection drag
             return;
 
-        if (e.OriginalSource is DependencyObject source && IsInsideValueEditor(source))
+        if (e.OriginalSource is DependencyObject source && ValueEditorHitTest.IsInsideValueEditor(source))
         {
-            e.Handled = true; // let the editor (including an open ComboBox dropdown) handle its own click
+            e.Handled = true;
             return;
         }
 
@@ -115,21 +116,6 @@ public class NodeControl : Control
         _isDragging = true;
         CaptureMouse();
         e.Handled = true;
-    }
-
-    private static bool IsInsideValueEditor(DependencyObject start)
-    {
-        DependencyObject? current = start;
-
-        while (current is not null)
-        {
-            if (current is TextBox or CheckBox or ComboBox)
-                return true;
-
-            current = LogicalTreeHelper.GetParent(current) ?? VisualTreeHelper.GetParent(current);
-        }
-
-        return false;
     }
 
     protected override void OnMouseMove(MouseEventArgs e)

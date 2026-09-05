@@ -5,54 +5,58 @@
     xmlns:model="clr-namespace:Nodevia.Models"
     xmlns:editors="clr-namespace:Nodevia.Controls.ValueEditors"
     xmlns:converters="clr-namespace:Nodevia.Converters">
-    
+
+    <!-- Converters -->
+    <converters:ObjectToDoubleConverter x:Key="ObjectToDoubleConverter"/>
+    <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+    <converters:ColorToBrushConverter x:Key="ColorToBrushConverter"/>
+
     <!-- ============================================================
-     NodeControl
-     ============================================================ -->
+         NodeControl
+         ============================================================ -->
 
     <Style TargetType="{x:Type local:NodeControl}">
         <Style.Resources>
+
             <DataTemplate x:Key="PortValueTemplate.bool">
                 <CheckBox
-    Margin="5,0,0,0"
-    VerticalAlignment="Center"
-    IsChecked="{Binding DefaultValue,
-        Mode=TwoWay}"/>
+                Margin="5,0,0,0"
+                VerticalAlignment="Center"
+                IsChecked="{Binding DefaultValue, Mode=TwoWay}"/>
             </DataTemplate>
 
             <DataTemplate x:Key="PortValueTemplate.Default">
                 <TextBox
-    Width="60"
-    Height="22"
-    Margin="5,0,0,0"
-    Padding="3,0"
-    VerticalContentAlignment="Center"
-    Text="{Binding DefaultValue,
-        Mode=TwoWay,
-        UpdateSourceTrigger=LostFocus}"/>
+                Width="60"
+                Height="22"
+                Margin="5,0,0,0"
+                Padding="3,0"
+                VerticalContentAlignment="Center"
+                Text="{Binding DefaultValue,
+                    Mode=TwoWay,
+                    UpdateSourceTrigger=LostFocus}"/>
             </DataTemplate>
 
             <DataTemplate x:Key="PortValueTemplate.string">
                 <TextBox
-    Width="60"
-    Height="22"
-    Margin="5,0,0,0"
-    Padding="3,0"
-    VerticalContentAlignment="Center"
-    Text="{Binding DefaultValue,
-        Mode=TwoWay,
-        UpdateSourceTrigger=LostFocus}"/>
+                Width="60"
+                Height="22"
+                Margin="5,0,0,0"
+                Padding="3,0"
+                VerticalContentAlignment="Center"
+                Text="{Binding DefaultValue,
+                    Mode=TwoWay,
+                    UpdateSourceTrigger=LostFocus}"/>
             </DataTemplate>
 
             <DataTemplate x:Key="PortValueTemplate.enum">
                 <ComboBox
-    Width="60"
-    Height="22"
-    Margin="5,0,0,0"
-    VerticalContentAlignment="Center"
-    ItemsSource="{Binding EnumValues}"
-    SelectedItem="{Binding DefaultValue,
-        Mode=TwoWay}"/>
+                Width="60"
+                Height="22"
+                Margin="5,0,0,0"
+                VerticalContentAlignment="Center"
+                ItemsSource="{Binding EnumValues}"
+                SelectedItem="{Binding DefaultValue, Mode=TwoWay}"/>
             </DataTemplate>
 
             <!-- NoneValueEditor -->
@@ -68,10 +72,8 @@
             <DataTemplate x:Key="PortValueTemplate.none">
                 <editors:NoneValueEditor Port="{Binding}"/>
             </DataTemplate>
-            
+
             <!-- SliderValueEditor -->
-            <converters:ObjectToDoubleConverter x:Key="ObjectToDoubleConverter"/>
-            <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
 
             <Style TargetType="{x:Type editors:SliderValueEditor}">
                 <Setter Property="Template">
@@ -84,128 +86,637 @@
                                 </Grid.ColumnDefinitions>
 
                                 <Slider
-    Grid.Column="0"
-    VerticalAlignment="Center"
-    Minimum="{Binding Min, RelativeSource={RelativeSource TemplatedParent}}"
-    Maximum="{Binding Max, RelativeSource={RelativeSource TemplatedParent}}"
-    SmallChange="{Binding Step, RelativeSource={RelativeSource TemplatedParent}}"
-    TickFrequency="{Binding Step, RelativeSource={RelativeSource TemplatedParent}}"
-    IsSnapToTickEnabled="True"
-    Value="{Binding Value, RelativeSource={RelativeSource TemplatedParent},
-        Converter={StaticResource ObjectToDoubleConverter}, Mode=TwoWay}"/>
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Minimum="{Binding Min, RelativeSource={RelativeSource TemplatedParent}}"
+                                Maximum="{Binding Max, RelativeSource={RelativeSource TemplatedParent}}"
+                                SmallChange="{Binding Step, RelativeSource={RelativeSource TemplatedParent}}"
+                                TickFrequency="{Binding Step, RelativeSource={RelativeSource TemplatedParent}}"
+                                IsSnapToTickEnabled="True"
+                                Value="{Binding Value,
+                                    RelativeSource={RelativeSource TemplatedParent},
+                                    Converter={StaticResource ObjectToDoubleConverter},
+                                    Mode=TwoWay}"/>
 
                                 <TextBlock
-                        Grid.Column="1"
-                        Margin="4,0,0,0"
-                        FontSize="9"
-                        Foreground="#FFD0D0D8"
-                        VerticalAlignment="Center"
-                        TextAlignment="Right"
-                        TextTrimming="CharacterEllipsis"
-                        Text="{Binding Value, RelativeSource={RelativeSource TemplatedParent}, StringFormat={}{0:0.##}}"/>
+                                Grid.Column="1"
+                                Margin="4,0,0,0"
+                                FontSize="9"
+                                Foreground="#FFD0D0D8"
+                                VerticalAlignment="Center"
+                                TextAlignment="Right"
+                                TextTrimming="CharacterEllipsis"
+                                Text="{Binding Value,
+                                    RelativeSource={RelativeSource TemplatedParent},
+                                    StringFormat={}{0:0.##}}"/>
 
                             </Grid>
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
             </Style>
-            
-            <!-- Vec2Editor -->
+
+            <!-- NumericUpDownControl -->
+
+            <Style TargetType="{x:Type local:NumericUpDown}">
+                <Setter Property="Width" Value="78"/>
+                <Setter Property="Height" Value="22"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type local:NumericUpDown}">
+                            <Border Background="#FF1B1B24"
+                        BorderBrush="#FF383844"
+                        BorderThickness="1"
+                        CornerRadius="2">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="15"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- VALUE -->
+                                    <TextBox Grid.Column="0"
+                                 Padding="4,0"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Foreground="#FFE2E2E8"
+                                 VerticalContentAlignment="Center"
+                                 Text="{Binding Number,
+                                                RelativeSource={RelativeSource TemplatedParent},
+                                                UpdateSourceTrigger=LostFocus,
+                                                StringFormat={}{0:0.###}}"/>
+
+                                    <!-- ARROWS -->
+                                    <Grid Grid.Column="1" Background="#FF292932">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+
+                                        <RepeatButton x:Name="PART_UpButton"
+                                          Grid.Row="0"
+                                          Content="▲"
+                                          FontSize="6"
+                                          Padding="0"
+                                          BorderThickness="0"
+                                          Background="Transparent"
+                                          Foreground="#FFB8B8C2"
+                                          Focusable="False"/>
+
+                                        <RepeatButton x:Name="PART_DownButton"
+                                          Grid.Row="1"
+                                          Content="▼"
+                                          FontSize="6"
+                                          Padding="0"
+                                          BorderThickness="0"
+                                          Background="Transparent"
+                                          Foreground="#FFB8B8C2"
+                                          Focusable="False"/>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+
+                            <!-- TRIGGERS -->
+                            <ControlTemplate.Triggers>
+                                <!-- UP ARROW HOVER -->
+                                <Trigger SourceName="PART_UpButton" Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="PART_UpButton" Property="Background" Value="#FF383844"/>
+                                    <Setter TargetName="PART_UpButton" Property="Foreground" Value="#FFE5E5EC"/>
+                                    <Setter TargetName="PART_UpButton" Property="Effect">
+                                        <Setter.Value>
+                                            <DropShadowEffect Color="#5500AEFF"
+                                                  BlurRadius="5"
+                                                  ShadowDepth="0"
+                                                  Opacity="0.35"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Trigger>
+
+                                <!-- DOWN ARROW HOVER -->
+                                <Trigger SourceName="PART_DownButton" Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="PART_DownButton" Property="Background" Value="#FF383844"/>
+                                    <Setter TargetName="PART_DownButton" Property="Foreground" Value="#FFE5E5EC"/>
+                                    <Setter TargetName="PART_DownButton" Property="Effect">
+                                        <Setter.Value>
+                                            <DropShadowEffect Color="#5500AEFF"
+                                                  BlurRadius="5"
+                                                  ShadowDepth="0"
+                                                  Opacity="0.35"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- NumericUpDownEditor -->
+            <Style TargetType="{x:Type editors:NumericUpDownValueEditor}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type editors:NumericUpDownValueEditor}">
+                            <local:NumericUpDown Number="{Binding Number, RelativeSource={RelativeSource TemplatedParent}}"
+                                     Min="{Binding Min, RelativeSource={RelativeSource TemplatedParent}}"
+                                     Max="{Binding Max, RelativeSource={RelativeSource TemplatedParent}}"
+                                     Step="{Binding Step, RelativeSource={RelativeSource TemplatedParent}}"
+                                     IsInteger="{Binding IsInteger, RelativeSource={RelativeSource TemplatedParent}}"/>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="VectorHeaderButtonStyle" TargetType="{x:Type ToggleButton}">
+                <!-- NORMAL -->
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderBrush" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Foreground" Value="#FFD0D0D8"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type ToggleButton}">
+                            <Border x:Name="PART_Background"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="3">
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                      Margin="{TemplateBinding Padding}"/>
+                            </Border>
+
+                            <ControlTemplate.Triggers>
+                                <!-- HOVER -->
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="PART_Background" Property="Background" Value="#332A3A46"/>
+                                </Trigger>
+
+                                <!-- PRESSED -->
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="PART_Background" Property="Background" Value="#44303D4A"/>
+                                </Trigger>
+
+                                <!-- CHECKED -->
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="PART_Background" Property="Background" Value="Transparent"/>
+                                    <Setter TargetName="PART_Background" Property="BorderBrush" Value="Transparent"/>
+                                </Trigger>
+
+                                <!-- CHECKED + HOVER -->
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsChecked" Value="True"/>
+                                        <Condition Property="IsMouseOver" Value="True"/>
+                                    </MultiTrigger.Conditions>
+                                    <Setter TargetName="PART_Background" Property="Background" Value="#332A3A46"/>
+                                </MultiTrigger>
+
+                                <!-- CHECKED + PRESSED -->
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsChecked" Value="True"/>
+                                        <Condition Property="IsPressed" Value="True"/>
+                                    </MultiTrigger.Conditions>
+                                    <Setter TargetName="PART_Background" Property="Background" Value="#44303D4A"/>
+                                </MultiTrigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Vec2Editor  -->
+
             <Style TargetType="{x:Type editors:Vec2ValueEditor}">
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="{x:Type editors:Vec2ValueEditor}">
-                            <StackPanel Orientation="Horizontal">
+                            <Border Background="Transparent" Padding="0">
+                                <StackPanel>
+                                    <!-- EXPAND / COLLAPSE BUTTON -->
+                                    <ToggleButton x:Name="PART_ExpandButton"
+                                      Height="22"
+                                      Style="{StaticResource VectorHeaderButtonStyle}"
+                                      HorizontalAlignment="Left"
+                                      HorizontalContentAlignment="Left"
+                                      Background="Transparent"
+                                      BorderThickness="0"
+                                      Padding="2,0"
+                                      Focusable="False"
+                                      IsChecked="{Binding IsExpanded,
+                                                          RelativeSource={RelativeSource TemplatedParent},
+                                                          Mode=TwoWay}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <!-- CHEVRON -->
+                                            <TextBlock x:Name="PART_Chevron"
+                                           Text="▶"
+                                           Width="15"
+                                           Foreground="#FFAAAAB5"
+                                           FontSize="9"
+                                           VerticalAlignment="Center"/>
 
-                                <TextBox
-                        Width="40"
-                        Height="22"
-                        Padding="3,0"
-                        VerticalContentAlignment="Center"
-                        Text="{Binding X, RelativeSource={RelativeSource TemplatedParent},
-                            UpdateSourceTrigger=LostFocus}"/>
+                                            <!-- PROPERTY NAME -->
+                                            <TextBlock Text="{Binding Port.Name,
+                                                          RelativeSource={RelativeSource TemplatedParent}}"
+                                           Foreground="#FFD0D0D8"
+                                           FontSize="11"
+                                           VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </ToggleButton>
 
-                                <TextBox
-                        Width="40"
-                        Height="22"
-                        Margin="3,0,0,0"
-                        Padding="3,0"
-                        VerticalContentAlignment="Center"
-                        Text="{Binding Y, RelativeSource={RelativeSource TemplatedParent},
-                            UpdateSourceTrigger=LostFocus}"/>
+                                    <!-- COMPONENTS -->
+                                    <Border x:Name="PART_Components"
+                                Margin="4,2,0,0"
+                                Padding="4"
+                                Background="#FF111118"
+                                BorderBrush="#FF292936"
+                                BorderThickness="1"
+                                CornerRadius="3"
+                                Visibility="Collapsed">
+                                        <StackPanel>
+                                            <!-- X -->
+                                            <Grid Height="26" Margin="0,1">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="18"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock Grid.Column="0"
+                                               Text="X"
+                                               Foreground="#FF8E8E9A"
+                                               FontSize="10"
+                                               VerticalAlignment="Center"/>
+
+                                                <local:NumericUpDown Grid.Column="1"
+                                                         Width="78"
+                                                         Height="22"
+                                                         Number="{Binding X,
+                                                                          RelativeSource={RelativeSource TemplatedParent}}"
+                                                         Min="-100000"
+                                                         Max="100000"
+                                                         Step="0.1"/>
+                                            </Grid>
+
+                                            <!-- Y -->
+                                            <Grid Height="26" Margin="0,1">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="18"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock Grid.Column="0"
+                                               Text="Y"
+                                               Foreground="#FF8E8E9A"
+                                               FontSize="10"
+                                               VerticalAlignment="Center"/>
+
+                                                <local:NumericUpDown Grid.Column="1"
+                                                         Width="78"
+                                                         Height="22"
+                                                         Number="{Binding Y,
+                                                                          RelativeSource={RelativeSource TemplatedParent}}"
+                                                         Min="-100000"
+                                                         Max="100000"
+                                                         Step="0.1"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- TRIGGERS -->
+                            <ControlTemplate.Triggers>
+                                <!-- Expanded -->
+                                <Trigger Property="IsExpanded" Value="True">
+                                    <Setter TargetName="PART_Components" Property="Visibility" Value="Visible"/>
+                                    <Setter TargetName="PART_Chevron" Property="Text" Value="▼"/>
+                                    <Setter TargetName="PART_ExpandButton" Property="ToolTip" Value="Collapse vector"/>
+                                </Trigger>
+
+                                <!-- Hover -->
+                                <Trigger SourceName="PART_ExpandButton" Property="IsMouseOver" Value="True">
+                                    <!-- subtle translucent highlight -->
+                                    <Setter TargetName="PART_ExpandButton" Property="Background" Value="#332A3A46"/>
+
+                                    <!-- subtle shadow -->
+                                    <Setter TargetName="PART_ExpandButton" Property="Effect">
+                                        <Setter.Value>
+                                            <DropShadowEffect Color="#5500AEFF"
+                                                  BlurRadius="7"
+                                                  ShadowDepth="0"
+                                                  Opacity="0.30"/>
+                                        </Setter.Value>
+                                    </Setter>
+
+                                    <!-- slightly brighter arrow -->
+                                    <Setter TargetName="PART_Chevron" Property="Foreground" Value="#FFD0D0D8"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Vec3Editor -->
+
+            <Style TargetType="{x:Type editors:Vec3ValueEditor}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type editors:Vec3ValueEditor}">
+                            <Border x:Name="PART_Container"
+                        Background="Transparent"
+                        CornerRadius="4"
+                        Padding="0">
+                                <StackPanel>
+                                    <!-- HEADER -->
+                                    <ToggleButton x:Name="PART_HeaderButton"
+                                      Height="22"
+                                      Style="{StaticResource VectorHeaderButtonStyle}"
+                                      HorizontalAlignment="Left"
+                                      HorizontalContentAlignment="Left"
+                                      Background="Transparent"
+                                      BorderThickness="0"
+                                      Padding="2,0"
+                                      Focusable="False"
+                                      IsChecked="{Binding IsExpanded,
+                                                          RelativeSource={RelativeSource TemplatedParent},
+                                                          Mode=TwoWay}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <!-- CHEVRON -->
+                                            <TextBlock x:Name="PART_Arrow"
+                                           Text="▶"
+                                           Width="15"
+                                           Foreground="#FFAAAAB5"
+                                           FontSize="9"
+                                           VerticalAlignment="Center"/>
+
+                                            <!-- PROPERTY NAME -->
+                                            <TextBlock Text="{Binding Port.Name,
+                                                          RelativeSource={RelativeSource TemplatedParent}}"
+                                           Foreground="#FFD0D0D8"
+                                           FontSize="11"
+                                           VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </ToggleButton>
+
+                                    <!-- COMPONENTS -->
+                                    <Border x:Name="PART_Components"
+                                Margin="4,2,0,0"
+                                Padding="4"
+                                Background="#FF111118"
+                                BorderBrush="#FF292936"
+                                BorderThickness="1"
+                                CornerRadius="3"
+                                Visibility="Collapsed">
+                                        <StackPanel>
+                                            <!-- X -->
+                                            <Grid Height="26" Margin="0,1">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="18"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock Grid.Column="0"
+                                               Text="X"
+                                               Foreground="#FF8E8E9A"
+                                               FontSize="10"
+                                               VerticalAlignment="Center"/>
+
+                                                <local:NumericUpDown Grid.Column="1"
+                                                         Width="78"
+                                                         Height="22"
+                                                         Number="{Binding X,
+                                                                          RelativeSource={RelativeSource TemplatedParent}}"
+                                                         Min="-100000"
+                                                         Max="100000"
+                                                         Step="0.1"/>
+                                            </Grid>
+
+                                            <!-- Y -->
+                                            <Grid Height="26" Margin="0,1">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="18"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock Grid.Column="0"
+                                               Text="Y"
+                                               Foreground="#FF8E8E9A"
+                                               FontSize="10"
+                                               VerticalAlignment="Center"/>
+
+                                                <local:NumericUpDown Grid.Column="1"
+                                                         Width="78"
+                                                         Height="22"
+                                                         Number="{Binding Y,
+                                                                          RelativeSource={RelativeSource TemplatedParent}}"
+                                                         Min="-100000"
+                                                         Max="100000"
+                                                         Step="0.1"/>
+                                            </Grid>
+
+                                            <!-- Z -->
+                                            <Grid Height="26" Margin="0,1">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="18"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock Grid.Column="0"
+                                               Text="Z"
+                                               Foreground="#FF8E8E9A"
+                                               FontSize="10"
+                                               VerticalAlignment="Center"/>
+
+                                                <local:NumericUpDown Grid.Column="1"
+                                                         Width="78"
+                                                         Height="22"
+                                                         Number="{Binding Z,
+                                                                          RelativeSource={RelativeSource TemplatedParent}}"
+                                                         Min="-100000"
+                                                         Max="100000"
+                                                         Step="0.1"/>
+                                            </Grid>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- TRIGGERS -->
+                            <ControlTemplate.Triggers>
+                                <!-- EXPANDED -->
+                                <Trigger Property="IsExpanded" Value="True">
+                                    <Setter TargetName="PART_Components" Property="Visibility" Value="Visible"/>
+                                    <Setter TargetName="PART_Arrow" Property="Text" Value="▼"/>
+                                </Trigger>
+                                <!-- HEADER HOVER -->
+                                <Trigger SourceName="PART_HeaderButton" Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="PART_HeaderButton" Property="Background" Value="#332A3A46"/>
+                                    <Setter TargetName="PART_HeaderButton" Property="Effect">
+                                        <Setter.Value>
+                                            <DropShadowEffect Color="#5500AEFF"
+                                                  BlurRadius="7"
+                                                  ShadowDepth="0"
+                                                  Opacity="0.30"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter TargetName="PART_Arrow" Property="Foreground" Value="#FFD0D0D8"/>
+                                </Trigger>
+                                <!-- PRESSED -->
+                                <Trigger SourceName="PART_HeaderButton" Property="IsPressed" Value="True">
+                                    <Setter TargetName="PART_HeaderButton" Property="Background" Value="#44303D4A"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style TargetType="{x:Type editors:ColorValueEditor}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type editors:ColorValueEditor}">
+                            <StackPanel>
+
+                                <ToggleButton
+                        x:Name="PART_Swatch"
+                        Width="28"
+                        Height="18"
+                        Background="{Binding Value, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ColorToBrushConverter}}"
+                        IsChecked="{Binding IsPickerOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                                    <ToggleButton.Template>
+                                        <ControlTemplate TargetType="ToggleButton">
+                                            <Border
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="#FF383844"
+                                    BorderThickness="1"
+                                    CornerRadius="3"/>
+                                        </ControlTemplate>
+                                    </ToggleButton.Template>
+                                </ToggleButton>
+
+                                <Popup
+                        x:Name="PART_Popup"
+                        IsOpen="{Binding IsPickerOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                        PlacementTarget="{Binding ElementName=PART_Swatch}"
+                        Placement="Bottom"
+                        StaysOpen="False"
+                        AllowsTransparency="True">
+
+                                    <Border
+                            Background="#FF1B1B24"
+                            BorderBrush="#FF383844"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Padding="8">
+
+                                        <StackPanel Width="140">
+
+                                            <Rectangle
+                                    Height="24"
+                                    Margin="0,0,0,6"
+                                    RadiusX="3"
+                                    RadiusY="3"
+                                    Fill="{Binding Value, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ColorToBrushConverter}}"/>
+
+                                            <!-- R -->
+                                            <Grid Height="24" Margin="0,1">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="14"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="R" Foreground="#FF8E8E9A" FontSize="10" VerticalAlignment="Center"/>
+                                                <local:NumericUpDown Grid.Column="1" Width="90" Height="20"
+                                        Min="0" Max="1" Step="0.01"
+                                        Number="{Binding R, RelativeSource={RelativeSource TemplatedParent}}"/>
+                                            </Grid>
+
+                                            <!-- G -->
+                                            <Grid Height="24" Margin="0,1">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="14"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="G" Foreground="#FF8E8E9A" FontSize="10" VerticalAlignment="Center"/>
+                                                <local:NumericUpDown Grid.Column="1" Width="90" Height="20"
+                                        Min="0" Max="1" Step="0.01"
+                                        Number="{Binding G, RelativeSource={RelativeSource TemplatedParent}}"/>
+                                            </Grid>
+
+                                            <!-- B -->
+                                            <Grid Height="24" Margin="0,1">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="14"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="B" Foreground="#FF8E8E9A" FontSize="10" VerticalAlignment="Center"/>
+                                                <local:NumericUpDown Grid.Column="1" Width="90" Height="20"
+                                        Min="0" Max="1" Step="0.01"
+                                        Number="{Binding B, RelativeSource={RelativeSource TemplatedParent}}"/>
+                                            </Grid>
+
+                                            <!-- A -->
+                                            <Grid Height="24" Margin="0,1">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="14"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Text="A" Foreground="#FF8E8E9A" FontSize="10" VerticalAlignment="Center"/>
+                                                <local:NumericUpDown Grid.Column="1" Width="90" Height="20"
+                                        Min="0" Max="1" Step="0.01"
+                                        Number="{Binding A, RelativeSource={RelativeSource TemplatedParent}}"/>
+                                            </Grid>
+
+                                            <!-- Hex -->
+                                            <TextBox
+                                    Margin="0,6,0,0"
+                                    Height="22"
+                                    Padding="4,0"
+                                    VerticalContentAlignment="Center"
+                                    Text="{Binding Hex, RelativeSource={RelativeSource TemplatedParent}, UpdateSourceTrigger=LostFocus}"/>
+
+                                        </StackPanel>
+                                    </Border>
+                                </Popup>
 
                             </StackPanel>
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
             </Style>
-            
-            <!-- NumericUpDownEditor -->
-            <Style TargetType="{x:Type editors:NumericUpDownValueEditor}">
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="{x:Type editors:NumericUpDownValueEditor}">
-                            <Grid Width="64" Height="22">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="16"/>
-                                </Grid.ColumnDefinitions>
 
-                                <TextBox
-                        x:Name="PART_TextBox"
-                        Grid.Column="0"
-                        Padding="3,0"
-                        VerticalContentAlignment="Center"
-                        Text="{Binding Number, RelativeSource={RelativeSource TemplatedParent},
-                            UpdateSourceTrigger=LostFocus, StringFormat={}{0:0.###}}"/>
-
-                                <Grid Grid.Column="1">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="*"/>
-                                        <RowDefinition Height="*"/>
-                                    </Grid.RowDefinitions>
-
-                                    <RepeatButton
-                            x:Name="PART_UpButton"
-                            Grid.Row="0"
-                            Content="▲"
-                            FontSize="6"
-                            Padding="0"
-                            Focusable="False"/>
-
-                                    <RepeatButton
-                            x:Name="PART_DownButton"
-                            Grid.Row="1"
-                            Content="▼"
-                            FontSize="6"
-                            Padding="0"
-                            Focusable="False"/>
-
-                                </Grid>
-
-                            </Grid>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
+            <DataTemplate x:Key="PortValueTemplate.color">
+                <editors:ColorValueEditor Port="{Binding}"/>
+            </DataTemplate>
 
             <DataTemplate x:Key="PortValueTemplate.int">
-                <editors:NumericUpDownValueEditor Port="{Binding}" IsInteger="True"/>
+                <editors:NumericUpDownValueEditor
+                Port="{Binding}"
+                IsInteger="True"/>
             </DataTemplate>
 
             <DataTemplate x:Key="PortValueTemplate.float">
-                <editors:NumericUpDownValueEditor Port="{Binding}"/>
+                <editors:NumericUpDownValueEditor
+                Port="{Binding}"/>
             </DataTemplate>
 
             <DataTemplate x:Key="PortValueTemplate.vec2">
-                <editors:Vec2ValueEditor Port="{Binding}"/>
+                <editors:Vec2ValueEditor
+                Port="{Binding}"/>
+            </DataTemplate>
+
+            <DataTemplate x:Key="PortValueTemplate.vec3">
+                <editors:Vec3ValueEditor
+                Port="{Binding}"/>
             </DataTemplate>
 
             <DataTemplate x:Key="PortValueTemplate.slider">
-                <editors:SliderValueEditor Port="{Binding}"/>
+                <editors:SliderValueEditor
+                Port="{Binding}"/>
             </DataTemplate>
 
         </Style.Resources>
+
         <Setter Property="Width" Value="220"/>
         <Setter Property="BorderBrush" Value="#FF333344"/>
         <Setter Property="BorderThickness" Value="1"/>
@@ -225,16 +736,17 @@
                         <Grid>
 
                             <Grid.RowDefinitions>
+
                                 <!-- Header -->
                                 <RowDefinition Height="32"/>
 
                                 <!-- Body -->
                                 <RowDefinition Height="Auto"/>
+
                             </Grid.RowDefinitions>
 
-                            <!-- =================================================
-                             HEADER
-                             ================================================= -->
+
+                            <!-- HEADER -->
 
                             <Border
                             x:Name="PART_Header"
@@ -255,14 +767,12 @@
                             </Border>
 
 
-                            <!-- =================================================
-                             BODY
-                             ================================================= -->
+                            <!-- BODY -->
 
                             <Grid
-                                Grid.Row="1"
-                                Margin="0,4,0,6"
-                                MinHeight="36">
+                            Grid.Row="1"
+                            Margin="0,4,0,6"
+                            MinHeight="36">
 
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
@@ -271,9 +781,7 @@
                                 </Grid.ColumnDefinitions>
 
 
-                                <!-- =========================
-                                 INPUT PORTS
-                                 ========================= -->
+                                <!-- INPUT PORTS -->
 
                                 <ItemsControl
                                 Grid.Column="0"
@@ -291,34 +799,65 @@
 
                                     <ItemsControl.ItemTemplate>
 
-                                        <DataTemplate DataType="{x:Type model:Port}">
+                                        <DataTemplate
+                                        DataType="{x:Type model:Port}">
 
                                             <StackPanel
-        Orientation="Horizontal"
-        VerticalAlignment="Center"
-        Margin="0,3"
-        ToolTip="{Binding DataType}">
+                                            Orientation="Horizontal"
+                                            VerticalAlignment="Center"
+                                            Margin="0,3"
+                                            ToolTip="{Binding DataType}">
 
                                                 <!-- Socket -->
                                                 <local:PortControl
-            Port="{Binding}"
-            ToolTip="{Binding Name}"/>
+                                                Port="{Binding}"
+                                                ToolTip="{Binding Name}"/>
 
                                                 <!-- Value editor -->
                                                 <ContentControl
-    Content="{Binding}"
-    IsEnabled="{Binding IsConnected, Converter={StaticResource InverseBooleanConverter}}"
-    ContentTemplateSelector="{Binding ValueEditorSelector, RelativeSource={RelativeSource AncestorType={x:Type local:NodeCanvas}}}"/>
+                                                Content="{Binding}"
+                                                IsEnabled="{Binding IsConnected,
+                                                    Converter={StaticResource InverseBooleanConverter}}"
+                                                ContentTemplateSelector="{Binding ValueEditorSelector,
+                                                    RelativeSource={RelativeSource AncestorType={x:Type local:NodeCanvas}}}"/>
 
                                                 <!-- Name -->
                                                 <TextBlock
-            Text="{Binding Name}"
-            Foreground="#FFD0D0D8"
-            FontSize="11"
-            VerticalAlignment="Center"
-            Margin="5,0,0,0"/>
+                                                x:Name="PART_PortName"
+                                                Text="{Binding Name}"
+                                                Foreground="#FFD0D0D8"
+                                                FontSize="11"
+                                                VerticalAlignment="Center"
+                                                Margin="5,0,0,0"/>
 
                                             </StackPanel>
+
+                                            <!-- Hide external name for vector editors -->
+                                            <DataTemplate.Triggers>
+
+                                                <DataTrigger
+                                                Binding="{Binding DataType}"
+                                                Value="vec2">
+
+                                                    <Setter
+                                                    TargetName="PART_PortName"
+                                                    Property="Visibility"
+                                                    Value="Collapsed"/>
+
+                                                </DataTrigger>
+
+                                                <DataTrigger
+                                                Binding="{Binding DataType}"
+                                                Value="vec3">
+
+                                                    <Setter
+                                                    TargetName="PART_PortName"
+                                                    Property="Visibility"
+                                                    Value="Collapsed"/>
+
+                                                </DataTrigger>
+
+                                            </DataTemplate.Triggers>
 
                                         </DataTemplate>
 
@@ -326,9 +865,8 @@
 
                                 </ItemsControl>
 
-                                <!-- =========================
-                                 OUTPUT PORTS
-                                 ========================= -->
+
+                                <!-- OUTPUT PORTS -->
 
                                 <ItemsControl
                                 Grid.Column="2"
@@ -350,21 +888,21 @@
                                         DataType="{x:Type model:Port}">
 
                                             <StackPanel
-                                                Orientation="Horizontal"
-                                                VerticalAlignment="Center"
-                                                Margin="0,3"
-                                                ToolTip="{Binding DataType}">
+                                            Orientation="Horizontal"
+                                            VerticalAlignment="Center"
+                                            Margin="0,3"
+                                            ToolTip="{Binding DataType}">
 
                                                 <TextBlock
-                                                    Text="{Binding Name}"
-                                                    Foreground="#FFD0D0D8"
-                                                    FontSize="11"
-                                                    VerticalAlignment="Center"
-                                                    HorizontalAlignment="Right"/>
+                                                Text="{Binding Name}"
+                                                Foreground="#FFD0D0D8"
+                                                FontSize="11"
+                                                VerticalAlignment="Center"
+                                                HorizontalAlignment="Right"/>
 
                                                 <local:PortControl
-                                                    Port="{Binding}"
-                                                    ToolTip="{Binding Name}"/>
+                                                Port="{Binding}"
+                                                ToolTip="{Binding Name}"/>
 
                                             </StackPanel>
 
@@ -381,9 +919,7 @@
                     </Border>
 
 
-                    <!-- =========================================================
-                     SELECTION
-                     ========================================================= -->
+                    <!-- SELECTION -->
 
                     <ControlTemplate.Triggers>
 

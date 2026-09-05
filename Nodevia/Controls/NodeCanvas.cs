@@ -1,4 +1,5 @@
 ﻿using Nodevia.Commands;
+using Nodevia.Controls.ValueEditors;
 using Nodevia.Models;
 using Nodevia.Rendering;
 using Nodevia.Routing;
@@ -229,6 +230,12 @@ public class NodeCanvas : ItemsControl
 
     protected override void OnMouseWheel(MouseWheelEventArgs e)
     {
+        if (e.Handled)
+            return;
+
+        if (e.OriginalSource is DependencyObject source && ValueEditorHitTest.IsInsideValueEditor(source))
+            return;
+
         base.OnMouseWheel(e);
 
         double oldZoom = Zoom;
@@ -607,26 +614,11 @@ public class NodeCanvas : ItemsControl
     {
         base.OnPreviewMouseDown(e);
 
-        if (e.OriginalSource is DependencyObject source && IsInsideValueEditor(source))
-            return; // let the editor (including an open dropdown) keep/receive its own focus
+        if (e.OriginalSource is DependencyObject source && ValueEditorHitTest.IsInsideValueEditor(source))
+            return;  // let the editor (including an open dropdown) keep/receive its own focus
 
         if (!IsKeyboardFocused)
             Focus();
-    }
-
-    private static bool IsInsideValueEditor(DependencyObject start)
-    {
-        DependencyObject? current = start;
-
-        while (current is not null)
-        {
-            if (current is TextBox or CheckBox or ComboBox)
-                return true;
-
-            current = LogicalTreeHelper.GetParent(current) ?? VisualTreeHelper.GetParent(current);
-        }
-
-        return false;
     }
 
     protected override void OnMouseMove(MouseEventArgs e)
