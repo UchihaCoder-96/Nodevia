@@ -12,7 +12,8 @@ public class NodeFactory
         var node = new Node
         {
             Title = definition.Title,
-            Position = position
+            Position = position,
+            Behavior = definition.Behavior
         };
 
         foreach (var port in definition.Inputs)

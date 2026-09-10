@@ -1,4 +1,5 @@
-﻿using Nodevia.Commands;
+﻿using Nodevia.Execution;
+using Nodevia.Commands;
 using Nodevia.Controls;
 using Nodevia.Models;
 using Nodevia.Nodes;
@@ -9,9 +10,27 @@ using System.Windows.Media;
 
 namespace Nodevia.Demo
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
+    public class AddBehavior : NodeBehavior
+    {
+        public override NodeOutputs Evaluate(NodeInputs inputs)
+        {
+            double a = inputs.Get<double>("A");
+            double b = inputs.Get<double>("B");
+
+            var outputs = new NodeOutputs();
+            outputs.Set("Result", a + b);
+            return outputs;
+        }
+    }
+
+    public class PrintBehavior : NodeBehavior
+    {
+        public override NodeOutputs Evaluate(NodeInputs inputs)
+        {
+            return new NodeOutputs();
+        }
+    }
+
     public partial class MainWindow : Window
     {
         private readonly NodeCatalog _catalog = new();
@@ -25,6 +44,30 @@ namespace Nodevia.Demo
             AddDemoNodes();
 
             NodeCanvas.MouseRightButtonUp += OnCanvasRightClick;
+            NodeCanvas.CommandManager.StateChanged += (_, _) => RefreshPrintNodes();
+
+            RefreshPrintNodes();
+        }
+
+        private void RefreshPrintNodes()
+        {
+            var evaluator = new GraphEvaluator(NodeCanvas.Graph);
+
+            foreach (var node in NodeCanvas.Graph.Nodes)
+            {
+                if (node.Behavior is not PrintBehavior)
+                    continue;
+
+                try
+                {
+                    object? value = evaluator.GetInputValue(node, "Value");
+                    node.Subtitle = value?.ToString() ?? "null";
+                }
+                catch (Exception ex)
+                {
+                    node.Subtitle = $"[WARNING] : {ex.Message}";
+                }
+            }
         }
 
         private void RegisterNodes()
@@ -34,15 +77,14 @@ namespace Nodevia.Demo
                     id: "math.add",
                     title: "Add",
                     category: "Math",
-                    inputs:
-                    [
-                        new PortDefinition("A", PortDirection.Input, "float", 5f),
-                        new PortDefinition("B", PortDirection.Input, "float", 10f)
+                    inputs: [
+                        new PortDefinition("A", PortDirection.Input, "float", 0f), 
+                        new PortDefinition("B", PortDirection.Input, "float", 0f)
                     ],
-                    outputs:
-                    [
+                    outputs: [
                         new PortDefinition("Result", PortDirection.Output, "float")
-                    ]));
+                    ],
+                    behavior: new AddBehavior()));
 
             _catalog.Register(
                 new NodeDefinition(
@@ -218,11 +260,9 @@ namespace Nodevia.Demo
                     id: "debug.print",
                     title: "Print",
                     category: "Debug",
-                    inputs:
-                    [
-                        new PortDefinition("Value", PortDirection.Input, "object")
-                    ],
-                    outputs: []));
+                    inputs: [new PortDefinition("Value", PortDirection.Input, "object")],
+                    outputs: [],
+                    behavior: new PrintBehavior()));
 
             _catalog.Register(
                 new NodeDefinition(
@@ -320,7 +360,7 @@ namespace Nodevia.Demo
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-
+            RefreshPrintNodes();
         }
 
         private void SaveAs_Click(object sender, RoutedEventArgs e)

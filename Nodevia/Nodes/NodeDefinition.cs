@@ -1,4 +1,5 @@
-﻿using Nodevia.Models;
+﻿using Nodevia.Execution;
+using Nodevia.Models;
 using System.Reflection.Metadata;
 
 namespace Nodevia.Nodes;
@@ -12,12 +13,15 @@ public class NodeDefinition
     public IReadOnlyList<PortDefinition> Inputs { get; }
     public IReadOnlyList<PortDefinition> Outputs { get; }
 
+    public NodeBehavior? Behavior { get; }
+
     public NodeDefinition(
         string id,
         string title,
         string category,
         IEnumerable<PortDefinition>? inputs = null,
-        IEnumerable<PortDefinition>? outputs = null)
+        IEnumerable<PortDefinition>? outputs = null,
+        NodeBehavior? behavior = null)
     {
         if (string.IsNullOrWhiteSpace(id))
             throw new ArgumentException("Node definition ID cannot be empty.", nameof(id));
@@ -34,6 +38,8 @@ public class NodeDefinition
 
         Inputs = inputs?.ToList() ?? [];
         Outputs = outputs?.ToList() ?? [];
+
+        Behavior = behavior;
     }
 }
 

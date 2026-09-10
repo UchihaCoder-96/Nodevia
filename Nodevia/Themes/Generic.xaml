@@ -10,6 +10,7 @@
     <converters:ObjectToDoubleConverter x:Key="ObjectToDoubleConverter"/>
     <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
     <converters:ColorToBrushConverter x:Key="ColorToBrushConverter"/>
+    <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
 
     <!-- ============================================================
          NodeControl
@@ -743,6 +744,9 @@
                                 <!-- Body -->
                                 <RowDefinition Height="Auto"/>
 
+                                <!-- Debug -->
+                                <RowDefinition Height="Auto"/>
+
                             </Grid.RowDefinitions>
 
 
@@ -753,17 +757,16 @@
                             Grid.Row="0"
                             Background="#FF292938"
                             CornerRadius="6,6,0,0">
-
+                                
                                 <TextBlock
-                                Text="{Binding Node.Title,
-                                    RelativeSource={RelativeSource TemplatedParent}}"
+                                Text="{Binding Node.Title, RelativeSource={RelativeSource TemplatedParent}}"
                                 Foreground="#FFF0F0F5"
                                 FontSize="14"
                                 FontWeight="SemiBold"
                                 VerticalAlignment="Center"
                                 HorizontalAlignment="Center"
                                 Margin="8,0"/>
-
+                                
                             </Border>
 
 
@@ -779,7 +782,6 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-
 
                                 <!-- INPUT PORTS -->
 
@@ -865,7 +867,6 @@
 
                                 </ItemsControl>
 
-
                                 <!-- OUTPUT PORTS -->
 
                                 <ItemsControl
@@ -913,7 +914,23 @@
                                 </ItemsControl>
 
                             </Grid>
+                            
+                            <!-- DEBUG -->
 
+                            <Border
+                            Grid.Row="2"
+                            Background="#FF292938"
+                            Margin="0,2,0,2">
+
+                                <TextBlock
+Text="{Binding Node.Subtitle, RelativeSource={RelativeSource TemplatedParent}}"
+Visibility="{Binding Node.Subtitle, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource StringToVisibilityConverter}}"
+Foreground="#FFAAAAB5"
+FontSize="11"
+HorizontalAlignment="Center"
+TextTrimming="CharacterEllipsis"
+MaxWidth="140"/>
+                            </Border>
                         </Grid>
 
                     </Border>

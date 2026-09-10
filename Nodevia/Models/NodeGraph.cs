@@ -42,22 +42,50 @@ namespace Nodevia.Models
         public Connection CreateConnection(Port source, Port target)
         {
             if (source.Direction != PortDirection.Output)
-                throw new ArgumentException(
-                    "Source must be an Output port.", nameof(source));
+                throw new ArgumentException("Source must be an Output port.", nameof(source));
 
             if (target.Direction != PortDirection.Input)
-                throw new ArgumentException(
-                    "Target must be an Input port.", nameof(target));
+                throw new ArgumentException("Target must be an Input port.", nameof(target));
 
             if (ReferenceEquals(source.Owner, target.Owner))
-                throw new InvalidOperationException(
-                    "Cannot connect a node to itself.");
+                throw new InvalidOperationException("Cannot connect a node to itself.");
 
             if (Connections.Any(c => c.Target == target))
-                throw new InvalidOperationException(
-                    "Target port already has a connection.");
+                throw new InvalidOperationException("Target port already has a connection.");
+
+            if (source.Owner is Node sourceNode && target.Owner is Node targetNode &&
+                WouldCreateCycle(sourceNode, targetNode))
+            {
+                throw new InvalidOperationException("This connection would create a cycle.");
+            }
 
             return new Connection(source, target);
+        }
+
+        private bool WouldCreateCycle(Node sourceNode, Node targetNode)
+        {
+            var visited = new HashSet<Node>();
+            var stack = new Stack<Node>();
+            stack.Push(targetNode);
+
+            while (stack.Count > 0)
+            {
+                var current = stack.Pop();
+
+                if (current == sourceNode)
+                    return true;
+
+                if (!visited.Add(current))
+                    continue;
+
+                foreach (var connection in Connections)
+                {
+                    if (connection.Source.Owner == current && connection.Target.Owner is Node next)
+                        stack.Push(next);
+                }
+            }
+
+            return false;
         }
 
         public void Disconnect(Connection connection) => Connections.Remove(connection);

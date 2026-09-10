@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Nodevia.Execution;
+using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -108,6 +109,22 @@ public class Node : INotifyPropertyChanged
         PropertyChanged?.Invoke(
             this,
             new PropertyChangedEventArgs(propertyName));
+    }
+
+    public NodeBehavior? Behavior { get; set; }
+
+    private string _subtitle = string.Empty;
+    public string Subtitle
+    {
+        get => _subtitle;
+        set
+        {
+            if (_subtitle == value)
+                return;
+
+            _subtitle = value;
+            OnPropertyChanged();
+        }
     }
 }
 
