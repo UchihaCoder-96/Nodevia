@@ -10,27 +10,6 @@ using System.Windows.Media;
 
 namespace Nodevia.Demo
 {
-    public class AddBehavior : NodeBehavior
-    {
-        public override NodeOutputs Evaluate(NodeInputs inputs)
-        {
-            double a = inputs.Get<double>("A");
-            double b = inputs.Get<double>("B");
-
-            var outputs = new NodeOutputs();
-            outputs.Set("Result", a + b);
-            return outputs;
-        }
-    }
-
-    public class PrintBehavior : NodeBehavior
-    {
-        public override NodeOutputs Evaluate(NodeInputs inputs)
-        {
-            return new NodeOutputs();
-        }
-    }
-
     public partial class MainWindow : Window
     {
         private readonly NodeCatalog _catalog = new();
@@ -99,7 +78,8 @@ namespace Nodevia.Demo
                     outputs:
                     [
                         new PortDefinition("Result", PortDirection.Output, "float")
-                    ]));
+                    ],
+                    behavior: new SubtractBehavior()));
 
             _catalog.Register(
                 new NodeDefinition(
@@ -114,7 +94,8 @@ namespace Nodevia.Demo
                     outputs:
                     [
                         new PortDefinition("Result", PortDirection.Output, "float")
-                    ]));
+                    ],
+                    behavior: new MultiplyBehavior()));
 
             _catalog.Register(
                 new NodeDefinition(
@@ -129,7 +110,8 @@ namespace Nodevia.Demo
                     outputs:
                     [
                         new PortDefinition("Result", PortDirection.Output, "float")
-                    ]));
+                    ],
+                    behavior: new DivideBehavior()));
 
             _catalog.Register(
                 new NodeDefinition(
@@ -238,11 +220,13 @@ namespace Nodevia.Demo
                     id: "constant.float",
                     title: "Float",
                     category: "Constants",
-                    inputs: [],
-                    outputs:
-                    [
-                        new PortDefinition("Value", PortDirection.Output, "float")
-                    ]));
+                    inputs: [
+                        new PortDefinition("C", PortDirection.Input, "float", 0f)
+                    ],
+                    outputs: [
+                        new PortDefinition("Result", PortDirection.Output, "float")
+                    ],
+                    behavior: new ConstantFBehavior()));
 
             _catalog.Register(
                 new NodeDefinition(
@@ -252,7 +236,7 @@ namespace Nodevia.Demo
                     inputs: [],
                     outputs:
                     [
-                        new PortDefinition("Value", PortDirection.Output, "int")
+                        new PortDefinition("Result", PortDirection.Output, "int")
                     ]));
 
             _catalog.Register(
