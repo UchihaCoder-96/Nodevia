@@ -112,6 +112,7 @@ public class Node : INotifyPropertyChanged
     }
 
     public NodeBehavior? Behavior { get; set; }
+    public string? BodyTemplateKey { get; internal set; }
 
     private string _subtitle = string.Empty;
     public string Subtitle
@@ -123,6 +124,17 @@ public class Node : INotifyPropertyChanged
                 return;
 
             _subtitle = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private IReadOnlyDictionary<string, object?> _outputs = new Dictionary<string, object?>();
+    public IReadOnlyDictionary<string, object?> Outputs
+    {
+        get => _outputs;
+        internal set
+        {
+            _outputs = value;
             OnPropertyChanged();
         }
     }

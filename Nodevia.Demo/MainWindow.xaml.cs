@@ -24,6 +24,7 @@ namespace Nodevia.Demo
 
             NodeCanvas.MouseRightButtonUp += OnCanvasRightClick;
             NodeCanvas.CommandManager.StateChanged += (_, _) => RefreshPrintNodes();
+            NodeCanvas.Graph.ValueChanged += (_, _) => RefreshPrintNodes();
 
             RefreshPrintNodes();
         }
@@ -221,7 +222,7 @@ namespace Nodevia.Demo
                     title: "Float",
                     category: "Constants",
                     inputs: [
-                        new PortDefinition("C", PortDirection.Input, "float", 0f)
+                        new PortDefinition("C", PortDirection.Input, "float", 0f, allowConnections: false)
                     ],
                     outputs: [
                         new PortDefinition("Result", PortDirection.Output, "float")
@@ -233,7 +234,9 @@ namespace Nodevia.Demo
                     id: "constant.integer",
                     title: "Integer",
                     category: "Constants",
-                    inputs: [],
+                    inputs: [
+                        new PortDefinition("C", PortDirection.Input, "int", 0)
+                    ],
                     outputs:
                     [
                         new PortDefinition("Result", PortDirection.Output, "int")
@@ -244,9 +247,10 @@ namespace Nodevia.Demo
                     id: "debug.print",
                     title: "Print",
                     category: "Debug",
-                    inputs: [new PortDefinition("Value", PortDirection.Input, "object")],
+                    inputs: [new PortDefinition("Value", PortDirection.Input, "none")],
                     outputs: [],
-                    behavior: new PrintBehavior()));
+                    behavior: new PrintBehavior(),
+                    bodyTemplateKey: "debug-console"));
 
             _catalog.Register(
                 new NodeDefinition(
@@ -270,12 +274,37 @@ namespace Nodevia.Demo
                     [
                         new PortDefinition("Output", PortDirection.Output, "string")
                     ]));
+
+            _catalog.Register(
+                new NodeDefinition(
+                    id: "image.posterize",
+                    title: "Posterize",
+                    category: "Image",
+                    inputs: [
+                        new PortDefinition("Image", PortDirection.Input, "image"),
+                        new PortDefinition("Threshold", PortDirection.Input, "float", 0.5f)
+                    ],
+                    outputs: [new PortDefinition("Result", PortDirection.Output, "image")],
+                    behavior: new PosterizeBehavior(),
+                    bodyTemplateKey: "posterize-preview"));
+
+            _catalog.Register(
+                new NodeDefinition(
+                    id: "image.img_input",
+                    title: "Input Image",
+                    category: "Image",
+                    inputs: [
+                        new PortDefinition("Path", PortDirection.Input, "string", allowConnections: false)
+                    ],
+                    outputs: [new PortDefinition("Result", PortDirection.Output, "image")],
+                    behavior: new ImageInputBehavior()));
+
         }
 
         private void AddDemoNodes()
         {
             var addNode = _factory.Create(
-                _catalog.Get("math.add"),
+                _catalog.Get("image.img_input"),
                 new Point(100, 100));
 
             var floatCNode = _factory.Create(
@@ -283,7 +312,7 @@ namespace Nodevia.Demo
                 new Point(100, 300));
 
             var printNode = _factory.Create(
-                _catalog.Get("debug.print"),
+                _catalog.Get("image.posterize"),
                 new Point(450, 250));
 
             NodeCanvas.CommandManager.Execute(new AddNodeCommand(NodeCanvas.Graph, addNode));

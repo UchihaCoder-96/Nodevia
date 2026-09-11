@@ -11,13 +11,16 @@ public class PortDefinition
     public IReadOnlyList<string> EnumValues { get; }
     public IReadOnlyDictionary<string, object> Metadata { get; }
 
+    public bool AllowConnections { get; }
+
     public PortDefinition(
         string name,
         PortDirection direction,
         string dataType = "object",
         object? defaultValue = null,
         IEnumerable<string>? enumValues = null,
-        IReadOnlyDictionary<string, object>? metadata = null)
+        IReadOnlyDictionary<string, object>? metadata = null,
+        bool allowConnections = true)
     {
         if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Port name cannot be empty.", nameof(name));
 
@@ -27,6 +30,7 @@ public class PortDefinition
         EnumValues = enumValues?.ToList() ?? [];
         DefaultValue = CoerceDefaultValue(dataType, defaultValue, Name);
         Metadata = metadata ?? new Dictionary<string, object>();
+        AllowConnections = allowConnections;
     }
 
     private static object? CoerceDefaultValue(string dataType, object? value, string portName)

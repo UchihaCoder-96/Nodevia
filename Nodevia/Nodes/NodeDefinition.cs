@@ -14,6 +14,7 @@ public class NodeDefinition
     public IReadOnlyList<PortDefinition> Outputs { get; }
 
     public NodeBehavior? Behavior { get; }
+    public string? BodyTemplateKey { get; }
 
     public NodeDefinition(
         string id,
@@ -21,7 +22,8 @@ public class NodeDefinition
         string category,
         IEnumerable<PortDefinition>? inputs = null,
         IEnumerable<PortDefinition>? outputs = null,
-        NodeBehavior? behavior = null)
+        NodeBehavior? behavior = null,
+        string? bodyTemplateKey = null)
     {
         if (string.IsNullOrWhiteSpace(id))
             throw new ArgumentException("Node definition ID cannot be empty.", nameof(id));
@@ -40,6 +42,7 @@ public class NodeDefinition
         Outputs = outputs?.ToList() ?? [];
 
         Behavior = behavior;
+        BodyTemplateKey = bodyTemplateKey;
     }
 }
 

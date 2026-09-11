@@ -2,8 +2,24 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:Nodevia.Demo"
+             xmlns:converters="clr-namespace:Nodevia.Converters;assembly=Nodevia"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <DataTemplate x:Key="NodeBody.debug-console">
+            <Border Background="#FF1A1A22" Margin="0,4,0,0" Padding="4" CornerRadius="3">
+                <TextBlock Text="{Binding Subtitle}" Foreground="#FF9A9AA5" FontSize="10"/>
+            </Border>
+        </DataTemplate>
+
+        <converters:BitmapToImageSourceConverter x:Key="BitmapToImageSourceConverter"/>
+
+        <DataTemplate x:Key="NodeBody.posterize-preview">
+            <Border Margin="0,4,0,0" CornerRadius="3" ClipToBounds="True">
+                <Image
+            Source="{Binding Outputs[Result], Converter={StaticResource BitmapToImageSourceConverter}}"
+            Stretch="Uniform"
+            MaxHeight="140"/>
+            </Border>
+        </DataTemplate>
     </Application.Resources>
 </Application>

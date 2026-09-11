@@ -33,9 +33,7 @@ public abstract class PortValueEditor : Control
         set => SetValue(ValueProperty, value);
     }
 
-    // Guards against Port -> Value -> Port feedback while syncing.
     private bool _isSyncing;
-
 
     private static void OnPortChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -49,38 +47,108 @@ public abstract class PortValueEditor : Control
             newPort.PropertyChanged += editor.OnPortPropertyChanged;
             editor.SyncValueFromPort(newPort);
         }
+        else
+        {
+            editor.DisplayValue = null;
+        }
 
         editor.OnPortAttached(e.NewValue as Port);
     }
 
     private void OnPortPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(Models.Port.DefaultValue) && Port is not null)
+        if (Port is null)
+            return;
+
+        if (e.PropertyName == nameof(Port.DefaultValue))
+        {
             SyncValueFromPort(Port);
+            return;
+        }
+
+        if (e.PropertyName == nameof(Port.LiveDisplayValue))
+        {
+            ApplyLiveValue();
+            return;
+        }
+
+        if (e.PropertyName == nameof(Port.IsConnected))
+        {
+            RefreshDisplayValue();
+        }
     }
 
     private void SyncValueFromPort(Port port)
     {
         _isSyncing = true;
+
         Value = port.DefaultValue;
+
         _isSyncing = false;
 
-        OnValueChanged();
+        RefreshDisplayValue();
     }
 
     private static void OnValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var editor = (PortValueEditor)d;
 
-        if (editor._isSyncing || editor.Port is null)
-            return;
+        if (!editor._isSyncing && editor.Port is not null)
+            editor.Port.DefaultValue = e.NewValue;
 
-        editor.Port.DefaultValue = e.NewValue;
         editor.OnValueChanged();
+        editor.RefreshDisplayValue();
     }
 
-    protected virtual void OnPortAttached(Port? port) { }
+    private void ApplyLiveValue()
+    {
+        if (Port is null || !Port.IsConnected)
+            return;
 
+        _isSyncing = true;
+
+        Value = Port.LiveDisplayValue;
+        Port.DefaultValue = Port.LiveDisplayValue;
+
+        _isSyncing = false;
+
+        DisplayValue = Value;
+    }
+
+    private void RefreshDisplayValue()
+    {
+        if (Port is { IsConnected: true })
+        {
+            
+            DisplayValue = Port.LiveDisplayValue ?? Value;
+        }
+        else
+        {
+            DisplayValue = Value;
+        }
+    }
+
+    public static readonly DependencyProperty DisplayValueProperty =
+        DependencyProperty.Register(
+            nameof(DisplayValue),
+            typeof(object),
+            typeof(PortValueEditor),
+            new FrameworkPropertyMetadata(null, OnDisplayValueChanged));
+
+    public object? DisplayValue
+    {
+        get => GetValue(DisplayValueProperty);
+        private set => SetValue(DisplayValueProperty, value);
+    }
+
+    private static void OnDisplayValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        ((PortValueEditor)d).OnDisplayValueChanged();
+    }
+
+    protected virtual void OnDisplayValueChanged() { }
     protected virtual void OnValueChanged() { }
+    protected virtual void OnPortAttached(Port? port) { }
 }
+
 

@@ -532,7 +532,7 @@ public class NodeCanvas : ItemsControl
         Point screenPos = e.GetPosition(this);
         PortControl? targetControl = FindPortControlAt(screenPos);
 
-        if (targetControl?.Port is not Port targetPort || ReferenceEquals(targetPort, sourcePort))
+        if (targetControl?.Port is not Port targetPort || ReferenceEquals(targetPort, sourcePort) || !targetPort.AllowConnections)
             return;
 
         // Figure out input/output, regardless of which one the user grabbed first

@@ -11,6 +11,8 @@
     <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
     <converters:ColorToBrushConverter x:Key="ColorToBrushConverter"/>
     <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+    <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    
 
     <!-- ============================================================
          NodeControl
@@ -71,6 +73,10 @@
             </Style>
 
             <DataTemplate x:Key="PortValueTemplate.none">
+                <editors:NoneValueEditor Port="{Binding}"/>
+            </DataTemplate>
+
+            <DataTemplate x:Key="PortValueTemplate.object">
                 <editors:NoneValueEditor Port="{Binding}"/>
             </DataTemplate>
 
@@ -716,9 +722,12 @@
                 Port="{Binding}"/>
             </DataTemplate>
 
+            <local:NodeBodyTemplateSelector x:Key="NodeBodyTemplateSelector"/>
+            
         </Style.Resources>
-
-        <Setter Property="Width" Value="220"/>
+        
+        <Setter Property="MinWidth" Value="220"/>
+        <Setter Property="MinHeight" Value="60"/>
         <Setter Property="BorderBrush" Value="#FF333344"/>
         <Setter Property="BorderThickness" Value="1"/>
 
@@ -786,51 +795,56 @@
                                 <!-- INPUT PORTS -->
 
                                 <ItemsControl
-                                Grid.Column="0"
-                                ItemsSource="{Binding Node.InputPorts,
-                                    RelativeSource={RelativeSource TemplatedParent}}"
-                                VerticalAlignment="Center"
-                                Margin="-7,0,0,0">
+                                    Grid.Column="0"
+                                    ItemsSource="{Binding Node.InputPorts, 
+                                        RelativeSource={RelativeSource TemplatedParent}}"
+                                    VerticalAlignment="Center"
+                                    Margin="-7,0,0,0">
 
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
                                             <StackPanel
-                                            Orientation="Vertical"/>
+                                                Orientation="Vertical"/>
                                         </ItemsPanelTemplate>
                                     </ItemsControl.ItemsPanel>
 
                                     <ItemsControl.ItemTemplate>
 
                                         <DataTemplate
-                                        DataType="{x:Type model:Port}">
+                                            DataType="{x:Type model:Port}">
 
                                             <StackPanel
-                                            Orientation="Horizontal"
-                                            VerticalAlignment="Center"
-                                            Margin="0,3"
-                                            ToolTip="{Binding DataType}">
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center"
+                                                Margin="0,3"
+                                                ToolTip="{Binding DataType}">
 
-                                                <!-- Socket -->
-                                                <local:PortControl
-                                                Port="{Binding}"
-                                                ToolTip="{Binding Name}"/>
+                                                <!-- SOCKET AREA -->
+                                                <Grid
+                                                    Width="22"
+                                                    Height="22">
+
+                                                    <local:PortControl
+                                                        Port="{Binding}"
+                                                        ToolTip="{Binding Name}"
+                                                        Visibility="{Binding AllowConnections, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                                                </Grid>
 
                                                 <!-- Value editor -->
                                                 <ContentControl
-                                                Content="{Binding}"
-                                                IsEnabled="{Binding IsConnected,
-                                                    Converter={StaticResource InverseBooleanConverter}}"
-                                                ContentTemplateSelector="{Binding ValueEditorSelector,
-                                                    RelativeSource={RelativeSource AncestorType={x:Type local:NodeCanvas}}}"/>
+                                                    Content="{Binding}"
+                                                    IsEnabled="{Binding IsConnected, Converter={StaticResource InverseBooleanConverter}}"
+                                                    ContentTemplateSelector="{Binding ValueEditorSelector, RelativeSource={RelativeSource AncestorType={x:Type local:NodeCanvas}}}"/>
 
                                                 <!-- Name -->
                                                 <TextBlock
-                                                x:Name="PART_PortName"
-                                                Text="{Binding Name}"
-                                                Foreground="#FFD0D0D8"
-                                                FontSize="11"
-                                                VerticalAlignment="Center"
-                                                Margin="5,0,0,0"/>
+                                                    x:Name="PART_PortName"
+                                                    Text="{Binding Name}"
+                                                    Foreground="#FFD0D0D8"
+                                                    FontSize="11"
+                                                    VerticalAlignment="Center"
+                                                    Margin="5,0,0,0"/>
 
                                             </StackPanel>
 
@@ -838,24 +852,24 @@
                                             <DataTemplate.Triggers>
 
                                                 <DataTrigger
-                                                Binding="{Binding DataType}"
-                                                Value="vec2">
+                                                    Binding="{Binding DataType}"
+                                                    Value="vec2">
 
                                                     <Setter
-                                                    TargetName="PART_PortName"
-                                                    Property="Visibility"
-                                                    Value="Collapsed"/>
+                                                        TargetName="PART_PortName"
+                                                        Property="Visibility"
+                                                        Value="Collapsed"/>
 
                                                 </DataTrigger>
 
                                                 <DataTrigger
-                                                Binding="{Binding DataType}"
-                                                Value="vec3">
+                                                    Binding="{Binding DataType}"
+                                                    Value="vec3">
 
                                                     <Setter
-                                                    TargetName="PART_PortName"
-                                                    Property="Visibility"
-                                                    Value="Collapsed"/>
+                                                        TargetName="PART_PortName"
+                                                        Property="Visibility"
+                                                        Value="Collapsed"/>
 
                                                 </DataTrigger>
 
@@ -914,8 +928,14 @@
                                 </ItemsControl>
 
                             </Grid>
-                            
-                            <!-- DEBUG -->
+
+                            <ContentControl
+    Grid.Row="2"
+    Content="{Binding Node, RelativeSource={RelativeSource TemplatedParent}}"
+    ContentTemplateSelector="{StaticResource NodeBodyTemplateSelector}"
+    Visibility="{Binding Node.BodyTemplateKey, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource StringToVisibilityConverter}}"/>
+
+                            <!-- DEBUG 
 
                             <Border
                             Grid.Row="2"
@@ -929,8 +949,10 @@ Foreground="#FFAAAAB5"
 FontSize="11"
 HorizontalAlignment="Center"
 TextTrimming="CharacterEllipsis"
-MaxWidth="140"/>
-                            </Border>
+MaxWidth="140"
+                                    ToolTip="{Binding Node.Subtitle}"/>
+                            </Border>-->
+                            
                         </Grid>
 
                     </Border>
@@ -1107,6 +1129,10 @@ MaxWidth="140"/>
             Value="{x:Static model:PortDirection.Input}">
                 <Setter Property="HorizontalAlignment" Value="Left"/>
             </DataTrigger>
+
+            <Trigger Property="AllowsConnections" Value="False">
+                <Setter Property="Visibility" Value="Collapsed"/>
+            </Trigger>
 
         </Style.Triggers>
 

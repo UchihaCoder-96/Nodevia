@@ -95,5 +95,20 @@ namespace Nodevia.Models
 
         public IReadOnlyList<string> EnumValues { get; internal set; } = [];
         public IReadOnlyDictionary<string, object> Metadata { get; internal set; } = new Dictionary<string, object>();
+        public bool AllowConnections { get; internal set; } = true;
+
+        private object? _liveDisplayValue;
+        public object? LiveDisplayValue
+        {
+            get => _liveDisplayValue;
+            internal set
+            {
+                if (Equals(_liveDisplayValue, value))
+                    return;
+
+                _liveDisplayValue = value;
+                OnPropertyChanged();
+            }
+        }
     }
 }

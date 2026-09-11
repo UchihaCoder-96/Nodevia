@@ -13,7 +13,9 @@ public class NodeFactory
         {
             Title = definition.Title,
             Position = position,
-            Behavior = definition.Behavior
+            Behavior = definition.Behavior,
+            BodyTemplateKey = definition.BodyTemplateKey,
+            Outputs = definition.Outputs.ToDictionary(o => o.Name, o => (object?)null)
         };
 
         foreach (var port in definition.Inputs)
@@ -26,6 +28,7 @@ public class NodeFactory
 
             nodePort.EnumValues = port.EnumValues;
             nodePort.Metadata = port.Metadata;
+            nodePort.AllowConnections = port.AllowConnections;
 
             node.InputPorts.Add(nodePort);
         }

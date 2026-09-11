@@ -2,14 +2,6 @@
 
 namespace Nodevia.Execution;
 
-/// <summary>
-/// Pull-based graph evaluator. Evaluating a node recursively evaluates
-/// whatever feeds its inputs first. Unconnected inputs fall back to the
-/// port's DefaultValue. Results are cached per instance, so asking for
-/// multiple nodes that share upstream nodes doesn't repeat shared work.
-/// Create a new GraphEvaluator whenever you want a fresh evaluation pass
-/// (e.g. after any graph edit) - this class does not track dirty state.
-/// </summary>
 public class GraphEvaluator
 {
     private readonly NodeGraph _graph;

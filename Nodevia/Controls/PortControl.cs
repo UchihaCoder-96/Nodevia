@@ -40,10 +40,12 @@ public class PortControl : Control
         {
             newPort.PropertyChanged += control.OnPortPropertyChanged;
             control.IsConnected = newPort.IsConnected;
+            control.AllowsConnections = newPort.AllowConnections;
         }
         else
         {
             control.IsConnected = false;
+            control.AllowsConnections = true;
         }
     }
 
@@ -76,6 +78,9 @@ public class PortControl : Control
     protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
     {
         base.OnMouseLeftButtonDown(e);
+
+        if (Port is null || !Port.AllowConnections)
+            return;
 
         if (Port is null)
             return;
@@ -127,6 +132,16 @@ public class PortControl : Control
     {
         get => (bool)GetValue(IsConnectedProperty);
         set => SetValue(IsConnectedProperty, value);
+    }
+
+    public static readonly DependencyProperty AllowsConnectionsProperty =
+    DependencyProperty.Register(nameof(AllowsConnections), typeof(bool), typeof(PortControl),
+        new FrameworkPropertyMetadata(true));
+
+    public bool AllowsConnections
+    {
+        get => (bool)GetValue(AllowsConnectionsProperty);
+        set => SetValue(AllowsConnectionsProperty, value);
     }
 }
 

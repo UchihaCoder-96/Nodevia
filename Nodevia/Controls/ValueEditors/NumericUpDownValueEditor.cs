@@ -52,15 +52,15 @@ public class NumericUpDownValueEditor : PortValueEditor
         if (port.Metadata.TryGetValue("Numeric.IsInteger", out var isInt) && isInt is bool isIntVal) IsInteger = isIntVal;
     }
 
-    protected override void OnValueChanged()
+    protected override void OnDisplayValueChanged()
     {
-        base.OnValueChanged();
+        base.OnDisplayValueChanged();
 
-        if (Value is null)
+        if (DisplayValue is null)
             return;
 
         _isSyncingFromValue = true;
-        Number = System.Convert.ToDouble(Value);
+        Number = System.Convert.ToDouble(DisplayValue);
         _isSyncingFromValue = false;
     }
 

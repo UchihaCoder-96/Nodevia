@@ -58,5 +58,6 @@ public class SliderValueEditor : PortValueEditor
         if (port.Metadata.TryGetValue("Slider.Step", out var step) && step is double stepVal)
             Step = stepVal;
     }
+
 }
 

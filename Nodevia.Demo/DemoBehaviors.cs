@@ -1,6 +1,7 @@
 ﻿using Nodevia.Execution;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Text;
 
 namespace Nodevia.Demo
@@ -73,4 +74,43 @@ namespace Nodevia.Demo
             return new NodeOutputs();
         }
     }
+
+    public class PosterizeBehavior : NodeBehavior
+    {
+        public override NodeOutputs Evaluate(NodeInputs inputs)
+        {
+            try
+            {
+                Bitmap img = inputs.Get<Bitmap>("Image");
+                float ths = inputs.Get<float>("Threshold");
+
+                var outputs = new NodeOutputs();
+                outputs.Set("Result", ImageFilters.Posterize(img, ths));
+                return outputs;
+            } catch
+            {
+                return new NodeOutputs();
+            }
+        }
+    }
+
+    public class ImageInputBehavior : NodeBehavior
+    {
+        public override NodeOutputs Evaluate(NodeInputs inputs)
+        {
+            try
+            {
+                string path = inputs.Get<string>("Path");
+
+                var outputs = new NodeOutputs();
+                outputs.Set("Result", ImageFilters.OpenImage(path));
+                return outputs;
+            }
+            catch
+            {
+                return new NodeOutputs();
+            }
+        }
+    }
 }
+

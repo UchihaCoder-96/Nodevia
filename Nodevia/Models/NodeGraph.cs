@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Text;
 
 namespace Nodevia.Models
@@ -10,6 +11,8 @@ namespace Nodevia.Models
     {
         public ObservableCollection<Node> Nodes { get; } = new();
         public ObservableCollection<Connection> Connections { get; } = new();
+
+        public event EventHandler? ValueChanged;
 
         public NodeGraph()
         {
@@ -37,6 +40,8 @@ namespace Nodevia.Models
 
             foreach (var port in affectedPorts)
                 port.IsConnected = Connections.Any(c => c.Source == port || c.Target == port);
+
+            RefreshLiveValues();
         }
 
         public Connection CreateConnection(Port source, Port target)
@@ -92,17 +97,71 @@ namespace Nodevia.Models
 
         private void OnNodesChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-            if (e.OldItems is null)
-                return;
-
-            foreach (Node node in e.OldItems)
+            if (e.NewItems is not null)
             {
-                var toRemove = Connections
-                    .Where(c => ReferenceEquals(c.Source.Owner, node) || ReferenceEquals(c.Target.Owner, node))
-                    .ToList();
+                foreach (Node node in e.NewItems)
+                    SubscribePorts(node);
+            }
 
-                foreach (var connection in toRemove)
-                    Connections.Remove(connection);
+            if (e.OldItems is not null)
+            {
+                foreach (Node node in e.OldItems)
+                {
+                    UnsubscribePorts(node);
+
+                    var toRemove = Connections
+                        .Where(c => ReferenceEquals(c.Source.Owner, node) || ReferenceEquals(c.Target.Owner, node))
+                        .ToList();
+
+                    foreach (var connection in toRemove)
+                        Connections.Remove(connection);
+                }
+            }
+
+            RefreshLiveValues();
+        }
+
+        private void SubscribePorts(Node node)
+        {
+            foreach (var port in node.InputPorts.Concat(node.OutputPorts))
+                port.PropertyChanged += OnPortPropertyChanged;
+        }
+
+        private void UnsubscribePorts(Node node)
+        {
+            foreach (var port in node.InputPorts.Concat(node.OutputPorts))
+                port.PropertyChanged -= OnPortPropertyChanged;
+        }
+
+        private void OnPortPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Port.DefaultValue))
+            {
+                ValueChanged?.Invoke(this, EventArgs.Empty);
+                RefreshLiveValues();
+            }
+        }
+
+        private void RefreshLiveValues()
+        {
+            var evaluator = new Execution.GraphEvaluator(this);
+
+            foreach (var node in Nodes)
+            {
+                foreach (var port in node.InputPorts)
+                {
+                    if (!port.IsConnected)
+                        continue;
+
+                    try { port.LiveDisplayValue = evaluator.GetInputValue(node, port.Name); }
+                    catch { port.LiveDisplayValue = null; }
+                }
+
+                if (node.Behavior is not null)
+                {
+                    try { node.Outputs = evaluator.Evaluate(node).Values; }
+                    catch { node.Outputs = node.OutputPorts.ToDictionary(p => p.Name, p => (object?)null); }
+                }
             }
         }
     }

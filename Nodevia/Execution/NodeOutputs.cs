@@ -4,6 +4,8 @@ public sealed class NodeOutputs
 {
     private readonly Dictionary<string, object?> _values = new();
 
+    public IReadOnlyDictionary<string, object?> Values => _values;
+
     public void Set(string portName, object? value) => _values[portName] = value;
 
     public object? Get(string portName)
