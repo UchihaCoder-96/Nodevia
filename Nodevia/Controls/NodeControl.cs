@@ -224,5 +224,21 @@ public class NodeControl : Control
         get => (DataTemplate?)GetValue(ContentTemplateProperty);
         set => SetValue(ContentTemplateProperty, value);
     }
+
+    public NodeControl()
+    {
+        Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
+    }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        FindAncestor<NodeCanvas>(this)?.RegisterNodeControl(this);
+    }
+
+    private void OnUnloaded(object sender, RoutedEventArgs e)
+    {
+        FindAncestor<NodeCanvas>(this)?.UnregisterNodeControl(this);
+    }
 }
 

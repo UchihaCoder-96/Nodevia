@@ -16,7 +16,7 @@ namespace Nodevia.Controls;
 
 public class NodeCanvas : ItemsControl
 {
-    public static readonly Size NodeVisualSize = new(180, 100); // temporary, until Node has real size
+    public static readonly Size NodeVisualSize = new(180, 100); // actual node size is used once node container is created.
     private readonly Commands.CommandManager _commandManager = new();
     public Commands.CommandManager CommandManager => _commandManager;
 
@@ -389,7 +389,7 @@ public class NodeCanvas : ItemsControl
 
         foreach (var n in Graph.Nodes)
         {
-            bool intersects = new Rect(n.Position, NodeVisualSize).IntersectsWith(rect);
+            bool intersects = new Rect(n.Position, GetNodeVisualSize(n)).IntersectsWith(rect);
 
             if (intersects)
                 n.IsSelected = true;
@@ -814,6 +814,39 @@ public class NodeCanvas : ItemsControl
     {
         get => (DataTemplateSelector)GetValue(ValueEditorSelectorProperty);
         set => SetValue(ValueEditorSelectorProperty, value);
+    }
+
+    // ------------------------------------------------------------
+    // Node control registry (Sync real size of node container.)
+    // ------------------------------------------------------------
+
+    private readonly Dictionary<Node, NodeControl> _nodeControlsByNode = new();
+
+    public void RegisterNodeControl(NodeControl control)
+    {
+        if (control.Node is not null)
+            _nodeControlsByNode[control.Node] = control;
+    }
+
+    public void UnregisterNodeControl(NodeControl control)
+    {
+        if (control.Node is not null &&
+            _nodeControlsByNode.TryGetValue(control.Node, out var existing) &&
+            ReferenceEquals(existing, control))
+        {
+            _nodeControlsByNode.Remove(control.Node);
+        }
+    }
+
+    private Size GetNodeVisualSize(Node node)
+    {
+        if (_nodeControlsByNode.TryGetValue(node, out var control) &&
+            control.ActualWidth > 0 && control.ActualHeight > 0)
+        {
+            return new Size(control.ActualWidth, control.ActualHeight);
+        }
+
+        return NodeVisualSize;
     }
 }
 
