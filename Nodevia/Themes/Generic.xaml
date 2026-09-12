@@ -1096,6 +1096,7 @@ MaxWidth="140"
 
         <Setter Property="Width" Value="14"/>
         <Setter Property="Height" Value="14"/>
+        <Setter Property="Foreground" Value="#FFCCCCCC"/>
 
         <Setter Property="Template">
             <Setter.Value>
@@ -1103,9 +1104,15 @@ MaxWidth="140"
 
                     <Ellipse
                     x:Name="PART_Dot"
-                    Fill="#FFCCCCCC"
+                    Fill="{TemplateBinding Foreground}"
                     Stroke="Black"
                     StrokeThickness="1.5"/>
+
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsRejected" Value="True">
+                            <Setter TargetName="PART_Dot" Property="Fill" Value="#FFE05C5C"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
 
                 </ControlTemplate>
             </Setter.Value>
@@ -1132,7 +1139,8 @@ MaxWidth="140"
         </Style.Triggers>
 
     </Style>
-
+    
+    <!-- LogPanel -->
     <Style TargetType="{x:Type local:LogPanel}">
         <Setter Property="Template">
             <Setter.Value>
@@ -1171,6 +1179,8 @@ MaxWidth="140"
         </Setter>
     </Style>
 
+    <!-- ToastHost -->
+    
     <Style TargetType="{x:Type local:ToastHost}">
         <Setter Property="IsHitTestVisible" Value="True"/>
         <Setter Property="Template">
@@ -1211,7 +1221,7 @@ MaxWidth="140"
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <!-- Severity icon -->
+                                        <!-- Severity icon ; an ellipse will be fine for now -->
                                         <Ellipse
                                         Grid.Column="0"
                                         Width="8" Height="8"

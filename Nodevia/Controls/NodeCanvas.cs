@@ -533,7 +533,10 @@ public class NodeCanvas : ItemsControl
         PortControl? targetControl = FindPortControlAt(screenPos);
 
         if (targetControl?.Port is not Port targetPort || ReferenceEquals(targetPort, sourcePort) || !targetPort.AllowConnections)
+        {
+            targetControl?.FlashRejected();
             return;
+        }
 
         // Figure out input/output, regardless of which one the user grabbed first
         Port? output = null;
@@ -551,7 +554,11 @@ public class NodeCanvas : ItemsControl
         }
 
         if (output is null || input is null)
-            return; // dropped on a same-direction port - not a valid connection
+        {
+            targetControl.FlashRejected();
+            Graph.Log.Warning("Cannot connect two ports of the same direction.");
+            return;
+        }
 
         try
         {
@@ -559,9 +566,10 @@ public class NodeCanvas : ItemsControl
 
             _commandManager.Execute(new AddConnectionCommand(Graph, connection));
         }
-        catch (InvalidOperationException)
+        catch (InvalidOperationException ex)
         {
-            // A visual "rejected" cue should go here, not essential for v1.
+            targetControl.FlashRejected();
+            Graph.Log.Warning($"Connection rejected: {ex.Message}");
         }
     }
 

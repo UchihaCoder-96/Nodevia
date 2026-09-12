@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace Nodevia.Controls;
 
@@ -142,6 +143,29 @@ public class PortControl : Control
     {
         get => (bool)GetValue(AllowsConnectionsProperty);
         set => SetValue(AllowsConnectionsProperty, value);
+    }
+
+    public static readonly DependencyProperty IsRejectedProperty =
+    DependencyProperty.Register(nameof(IsRejected), typeof(bool), typeof(PortControl),
+        new FrameworkPropertyMetadata(false));
+
+    public bool IsRejected
+    {
+        get => (bool)GetValue(IsRejectedProperty);
+        set => SetValue(IsRejectedProperty, value);
+    }
+
+    public void FlashRejected()
+    {
+        IsRejected = true;
+
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
+        timer.Tick += (_, _) =>
+        {
+            IsRejected = false;
+            timer.Stop();
+        };
+        timer.Start();
     }
 }
 
