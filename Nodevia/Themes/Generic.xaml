@@ -4,7 +4,8 @@
     xmlns:local="clr-namespace:Nodevia.Controls"
     xmlns:model="clr-namespace:Nodevia.Models"
     xmlns:editors="clr-namespace:Nodevia.Controls.ValueEditors"
-    xmlns:converters="clr-namespace:Nodevia.Converters">
+    xmlns:converters="clr-namespace:Nodevia.Converters"
+    xmlns:diag="clr-namespace:Nodevia.Diagnostics">
 
     <!-- Converters -->
     <converters:ObjectToDoubleConverter x:Key="ObjectToDoubleConverter"/>
@@ -1128,6 +1129,44 @@ MaxWidth="140"
 
         </Style.Triggers>
 
+    </Style>
+
+    <Style TargetType="{x:Type local:LogPanel}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:LogPanel}">
+                    <Border Background="#FF16161C" BorderBrush="#FF2A2A34" BorderThickness="1">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding Log.Entries, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type diag:LogEntry}">
+                                        <TextBlock
+                                        Text="{Binding Message}"
+                                        FontSize="11"
+                                        Margin="4,1"
+                                        TextWrapping="Wrap">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#FFD0D0D8"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Severity}" Value="Warning">
+                                                            <Setter Property="Foreground" Value="#FFE0B84C"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Severity}" Value="Error">
+                                                            <Setter Property="Foreground" Value="#FFE05C5C"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
 </ResourceDictionary>

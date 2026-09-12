@@ -12,6 +12,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="120"/>
         </Grid.RowDefinitions>
 
 
@@ -46,11 +47,19 @@
             </MenuItem>
 
         </Menu>
-        
+
         <nodevia:NodeCanvas
             x:Name="NodeCanvas"
             Grid.Row="1"
             Background="#FF070718"/>
+        
+        <nodevia:LogPanel
+            x:Name="LogPanel"
+            Grid.Row="2"
+            Log="{Binding Graph.Log, ElementName=NodeCanvas}"
+            Height="120"
+            Background="#FF070718"
+            DockPanel.Dock="Bottom" Margin="0"/>
 
     </Grid>
 

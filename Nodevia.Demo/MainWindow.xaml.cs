@@ -27,6 +27,7 @@ namespace Nodevia.Demo
             NodeCanvas.MouseRightButtonUp += OnCanvasRightClick;
             NodeCanvas.CommandManager.StateChanged += (_, _) => RefreshPrintNodes();
             NodeCanvas.Graph.ValueChanged += (_, _) => RefreshPrintNodes();
+            NodeCanvas.Graph.LiveUpdate = false;
 
             RefreshPrintNodes();
         }
@@ -374,6 +375,9 @@ namespace Nodevia.Demo
 
             string loaded = File.ReadAllText("graph.json");
             NodeCanvas.Graph = serializer.Deserialize(loaded, _catalog, _factory);
+            NodeCanvas.Graph.Log.Info("File opened successfully!");
+            NodeCanvas.Graph.Log.Warning("File opened successfully!");
+            NodeCanvas.Graph.Log.Error("File opened successfully!");
         }
 
         private void Save_Click(object sender, RoutedEventArgs e)
@@ -387,6 +391,7 @@ namespace Nodevia.Demo
 
         private void SaveAs_Click(object sender, RoutedEventArgs e)
         {
+            NodeCanvas.Graph.Refresh();
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)

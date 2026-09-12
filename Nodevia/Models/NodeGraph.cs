@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Nodevia.Diagnostics;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Text;
+
 
 namespace Nodevia.Models
 {
@@ -13,6 +12,8 @@ namespace Nodevia.Models
         public ObservableCollection<Connection> Connections { get; } = new();
 
         public event EventHandler? ValueChanged;
+        public bool LiveUpdate { get; set; } = true;
+        public GraphLog Log { get; } = new();
 
         public NodeGraph()
         {
@@ -41,7 +42,7 @@ namespace Nodevia.Models
             foreach (var port in affectedPorts)
                 port.IsConnected = Connections.Any(c => c.Source == port || c.Target == port);
 
-            RefreshLiveValues();
+            if (LiveUpdate) RefreshLiveValues();
         }
 
         public Connection CreateConnection(Port source, Port target)
@@ -134,7 +135,7 @@ namespace Nodevia.Models
                 }
             }
 
-            RefreshLiveValues();
+            if (LiveUpdate) RefreshLiveValues();
         }
 
         private void SubscribePorts(Node node)
@@ -154,7 +155,7 @@ namespace Nodevia.Models
             if (e.PropertyName == nameof(Port.DefaultValue))
             {
                 ValueChanged?.Invoke(this, EventArgs.Empty);
-                RefreshLiveValues();
+                if (LiveUpdate) RefreshLiveValues();
             }
         }
 
@@ -169,16 +170,32 @@ namespace Nodevia.Models
                     if (!port.IsConnected)
                         continue;
 
-                    try { port.LiveDisplayValue = evaluator.GetInputValue(node, port.Name); }
-                    catch { port.LiveDisplayValue = null; }
+                    try
+                    {
+                        port.LiveDisplayValue = evaluator.GetInputValue(node, port.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        port.LiveDisplayValue = null;
+                        Log.Error($"'{node.Title}' input '{port.Name}': {ex.Message}");
+                    }
                 }
 
                 if (node.Behavior is not null)
                 {
-                    try { node.Outputs = evaluator.Evaluate(node).Values; }
-                    catch { node.Outputs = node.OutputPorts.ToDictionary(p => p.Name, p => (object?)null); }
+                    try
+                    {
+                        node.Outputs = evaluator.Evaluate(node).Values;
+                    }
+                    catch (Exception ex)
+                    {
+                        node.Outputs = node.OutputPorts.ToDictionary(p => p.Name, p => (object?)null);
+                        Log.Error($"'{node.Title}': {ex.Message}");
+                    }
                 }
             }
         }
+
+        public void Refresh() => RefreshLiveValues();
     }
 }
