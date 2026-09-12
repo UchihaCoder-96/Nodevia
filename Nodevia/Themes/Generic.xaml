@@ -1050,8 +1050,10 @@ MaxWidth="140"
                                     StrokeThickness="1"
                                     IsHitTestVisible="False"
                                     Visibility="Collapsed"/>
-
                             </Canvas>
+                            <local:ToastHost
+                                x:Name="PART_ToastHost"
+                                Log="{Binding Graph.Log, RelativeSource={RelativeSource TemplatedParent}}"/>
                         </Grid>
                     </Border>
 
@@ -1164,6 +1166,101 @@ MaxWidth="140"
                             </ItemsControl>
                         </ScrollViewer>
                     </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type local:ToastHost}">
+        <Setter Property="IsHitTestVisible" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:ToastHost}">
+                    <ItemsControl
+                    ItemsSource="{Binding Toasts, RelativeSource={RelativeSource TemplatedParent}}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    Margin="0,10,0,0">
+
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Vertical"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type diag:ToastItem}">
+
+                                <Border
+                                Background="#FF1B1B24"
+                                BorderBrush="#FF383844"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Margin="0,0,0,6"
+                                Padding="10,6"
+                                MaxWidth="360">
+
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="Black" BlurRadius="12" ShadowDepth="2" Opacity="0.4"/>
+                                    </Border.Effect>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Severity icon -->
+                                        <Ellipse
+                                        Grid.Column="0"
+                                        Width="8" Height="8"
+                                        VerticalAlignment="Center"
+                                        Margin="0,0,8,0">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
+                                                    <Setter Property="Fill" Value="#FFE0B84C"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Entry.Severity}" Value="Error">
+                                                            <Setter Property="Fill" Value="#FFE05C5C"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+
+                                        <!-- Message -->
+                                        <TextBlock
+                                        Grid.Column="1"
+                                        Text="{Binding Entry.Message}"
+                                        ToolTip="{Binding Entry.Message}"
+                                        Foreground="#FFD0D0D8"
+                                        FontSize="11"
+                                        TextTrimming="CharacterEllipsis"
+                                        VerticalAlignment="Center"/>
+
+                                        <!-- Dismiss button -->
+                                        <Button
+                                        Grid.Column="2"
+                                        Content="✕"
+                                        Command="{Binding DismissCommand}"
+                                        Margin="8,0,0,0"
+                                        Padding="0"
+                                        Width="16" Height="16"
+                                        FontSize="10"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Foreground="#FF8E8E9A"
+                                        Cursor="Hand"/>
+
+                                    </Grid>
+
+                                </Border>
+
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+
+                    </ItemsControl>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
