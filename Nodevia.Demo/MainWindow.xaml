@@ -3,65 +3,100 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:nodevia="clr-namespace:Nodevia.Controls;assembly=Nodevia"
-    Title="Nodevia Demo"
+    xmlns:commands="clr-namespace:Nodevia.Commands;assembly=Nodevia"
+    Title="Nodevia Calculator Demo"
     Width="1000"
-    Height="700">
+    Height="600"
+    WindowStartupLocation="CenterScreen">
 
-    <Grid>
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </Window.Resources>
 
-        <Grid.RowDefinitions>
-            <RowDefinition Height="32"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="120"/>
-        </Grid.RowDefinitions>
+    <DockPanel>
 
-
-        <Menu
-            Grid.Row="0"
-            Padding="4,0">
+        <Menu DockPanel.Dock="Top">
 
             <MenuItem Header="_File">
-
-                <MenuItem
-                    Header="_New"
-                    Click="New_Click"/>
-
-                <MenuItem
-                    Header="_Open..."
-                    Click="Open_Click"/>
-
-                <MenuItem
-                    Header="_Save"
-                    Click="Save_Click"/>
-
-                <MenuItem
-                    Header="Save _As..."
-                    Click="SaveAs_Click"/>
-
+                <MenuItem Header="_New" Click="New_Click" InputGestureText="Ctrl+N"/>
+                <MenuItem Header="_Open..." Click="Open_Click" InputGestureText="Ctrl+O"/>
                 <Separator/>
+                <MenuItem Header="_Save" Click="Save_Click" InputGestureText="Ctrl+S"/>
+                <MenuItem Header="Save _As..." Click="SaveAs_Click"/>
+                <Separator/>
+                <MenuItem Header="E_xit" Click="Exit_Click"/>
+            </MenuItem>
 
+            <MenuItem Header="_Edit">
+                <MenuItem Header="_Undo" Click="Undo_Click" InputGestureText="Ctrl+Z"/>
+                <MenuItem Header="_Redo" Click="Redo_Click" InputGestureText="Ctrl+Y"/>
+                <Separator/>
+                <MenuItem Header="Cu_t" Command="ApplicationCommands.Cut" CommandTarget="{Binding ElementName=NodeCanvas}"/>
+                <MenuItem Header="_Copy" Command="ApplicationCommands.Copy" CommandTarget="{Binding ElementName=NodeCanvas}"/>
+                <MenuItem Header="_Paste" Command="ApplicationCommands.Paste" CommandTarget="{Binding ElementName=NodeCanvas}"/>
+                <MenuItem Header="D_uplicate" Command="{x:Static commands:NodeCanvasCommands.Duplicate}" CommandTarget="{Binding ElementName=NodeCanvas}" InputGestureText="Ctrl+D"/>
+                <Separator/>
+                <MenuItem Header="_Delete" Command="{x:Static commands:NodeCanvasCommands.DeleteSelection}" CommandTarget="{Binding ElementName=NodeCanvas}" InputGestureText="Del"/>
+                <MenuItem Header="Select _All" Command="{x:Static commands:NodeCanvasCommands.SelectAll}" CommandTarget="{Binding ElementName=NodeCanvas}" InputGestureText="Ctrl+A"/>
+            </MenuItem>
+
+            <MenuItem Header="_Window">
                 <MenuItem
-                    Header="E_xit"
-                    Click="Exit_Click"/>
-
+                    Header="Show _Status Bar"
+                    IsCheckable="True"
+                    IsChecked="{Binding IsStatusBarVisible, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                <MenuItem
+                    Header="Show _Console"
+                    IsCheckable="True"
+                    IsChecked="{Binding IsConsoleVisible, RelativeSource={RelativeSource AncestorType=Window}}"/>
             </MenuItem>
 
         </Menu>
 
-        <nodevia:NodeCanvas
-            x:Name="NodeCanvas"
-            Grid.Row="1"
-            Background="#FF070718"/>
-        
-        <nodevia:LogPanel
-            x:Name="LogPanel"
-            Grid.Row="2"
-            Log="{Binding Graph.Log, ElementName=NodeCanvas}"
-            Height="120"
-            Background="#FF070718"
-            DockPanel.Dock="Bottom" Margin="0"/>
+        <StatusBar
+            DockPanel.Dock="Bottom"
+            Visibility="{Binding IsStatusBarVisible, Converter={StaticResource BoolToVisibilityConverter}, RelativeSource={RelativeSource AncestorType=Window}}">
 
-    </Grid>
+            <StatusBarItem>
+                <TextBlock Text="{Binding NodeCountText, RelativeSource={RelativeSource AncestorType=Window}}"/>
+            </StatusBarItem>
+            <Separator/>
+            <StatusBarItem>
+                <TextBlock Text="{Binding ConnectionCountText, RelativeSource={RelativeSource AncestorType=Window}}"/>
+            </StatusBarItem>
+            <Separator/>
+            <StatusBarItem>
+                <TextBlock Text="{Binding SelectedCountText, RelativeSource={RelativeSource AncestorType=Window}}"/>
+            </StatusBarItem>
+
+            <StatusBarItem HorizontalAlignment="Right">
+                <TextBlock Text="{Binding ZoomText, RelativeSource={RelativeSource AncestorType=Window}}"/>
+            </StatusBarItem>
+
+        </StatusBar>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <nodevia:NodeCanvas
+                x:Name="NodeCanvas"
+                Grid.Row="0"
+                Background="#FF070718"/>
+
+            <nodevia:LogPanel
+                x:Name="LogPanel"
+                Grid.Row="1"
+                Height="80"
+                Log="{Binding Graph.Log, ElementName=NodeCanvas}"
+                Visibility="{Binding IsConsoleVisible, Converter={StaticResource BoolToVisibilityConverter}, RelativeSource={RelativeSource AncestorType=Window}}"/>
+
+        </Grid>
+
+    </DockPanel>
 
 </Window>
-
+    
+    
