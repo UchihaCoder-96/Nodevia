@@ -12,5 +12,8 @@ public static class NodeCanvasCommands
 
     public static readonly RoutedUICommand CancelAction = new(
         "Cancel Action", nameof(CancelAction), typeof(NodeCanvasCommands));
+
+    public static readonly RoutedUICommand Duplicate = new(
+        "Duplicate", nameof(Duplicate), typeof(NodeCanvasCommands));
 }
 

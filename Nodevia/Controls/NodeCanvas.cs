@@ -686,6 +686,27 @@ public class NodeCanvas : ItemsControl
             NodeCanvasCommands.CancelAction,
             (_, _) => CancelActiveDrag()));
 
+        CommandBindings.Add(new CommandBinding(
+            ApplicationCommands.Copy,
+            (_, _) => CopySelection(),
+            (_, e) => e.CanExecute = Graph.Nodes.Any(n => n.IsSelected)));
+
+        CommandBindings.Add(new CommandBinding(
+            ApplicationCommands.Cut,
+            (_, _) => CutSelection(),
+            (_, e) => e.CanExecute = Graph.Nodes.Any(n => n.IsSelected)));
+
+        CommandBindings.Add(new CommandBinding(
+            ApplicationCommands.Paste,
+            (_, _) => PasteClipboard(),
+            (_, e) => e.CanExecute = _clipboard.HasContent));
+
+        CommandBindings.Add(new CommandBinding(
+            NodeCanvasCommands.Duplicate,
+            (_, _) => DuplicateSelection(),
+            (_, e) => e.CanExecute = Graph.Nodes.Any(n => n.IsSelected)));
+
+        InputBindings.Add(new KeyBinding(NodeCanvasCommands.Duplicate, Key.D, ModifierKeys.Control));
         InputBindings.Add(new KeyBinding(NodeCanvasCommands.DeleteSelection, Key.Delete, ModifierKeys.None));
         InputBindings.Add(new KeyBinding(NodeCanvasCommands.SelectAll, Key.A, ModifierKeys.Control));
         InputBindings.Add(new KeyBinding(NodeCanvasCommands.CancelAction, Key.Escape, ModifierKeys.None));
@@ -847,6 +868,58 @@ public class NodeCanvas : ItemsControl
         }
 
         return NodeVisualSize;
+    }
+
+    private readonly NodeClipboard _clipboard = new();
+    private static readonly Vector PasteOffset = new(30, 30);
+
+    public void CopySelection()
+    {
+        var selected = Graph.Nodes.Where(n => n.IsSelected).ToList();
+        if (selected.Count == 0)
+            return;
+
+        _clipboard.Copy(selected, Graph.Connections);
+    }
+
+    public void CutSelection()
+    {
+        CopySelection();
+        DeleteSelectedNodes(); // already a CompositeCommand, Cut is undoable for free ;)
+    }
+
+    public void PasteClipboard()
+    {
+        if (!_clipboard.HasContent)
+            return;
+
+        var (newNodes, command) = _clipboard.Instantiate(Graph, PasteOffset);
+        CommandManager.Execute(command);
+
+        SelectOnlyThese(newNodes);
+    }
+
+    public void DuplicateSelection()
+    {
+        var selected = Graph.Nodes.Where(n => n.IsSelected).ToList();
+        if (selected.Count == 0)
+            return;
+
+        var snapshot = new NodeClipboard();
+        snapshot.Copy(selected, Graph.Connections); // separate from the main clipboard
+
+        var (newNodes, command) = snapshot.Instantiate(Graph, PasteOffset);
+        CommandManager.Execute(command);
+
+        SelectOnlyThese(newNodes);
+    }
+
+    private void SelectOnlyThese(List<Node> nodesToSelect)
+    {
+        foreach (var n in Graph.Nodes)
+            n.IsSelected = nodesToSelect.Contains(n);
+
+        ClearConnectionSelection();
     }
 }
 

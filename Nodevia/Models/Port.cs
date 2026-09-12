@@ -110,5 +110,12 @@ namespace Nodevia.Models
                 OnPropertyChanged();
             }
         }
+
+        public Port Clone() => new(Name, Direction, DataType, DefaultValue)
+        {
+            EnumValues = EnumValues,
+            Metadata = Metadata,
+            AllowConnections = AllowConnections
+        };
     }
 }
