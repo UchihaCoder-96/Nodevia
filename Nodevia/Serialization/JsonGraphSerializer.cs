@@ -3,15 +3,28 @@ using Nodevia.Nodes;
 using System.IO;
 using System.Text.Json;
 using System.Windows;
+using System.Windows.Media;
 
 namespace Nodevia.Serialization;
 
 public class JsonGraphSerializer : IGraphSerializer
 {
+    private static readonly Dictionary<string, Type> KnownTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["int"] = typeof(int),
+        ["float"] = typeof(double),
+        ["bool"] = typeof(bool),
+        ["string"] = typeof(string),
+        ["vec2"] = typeof(Vec2),
+        ["vec3"] = typeof(Vec3),
+        ["color"] = typeof(System.Windows.Media.Color),
+    };
+
     private static readonly JsonSerializerOptions Options = new()
     {
         WriteIndented = true,
-        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+        PropertyNameCaseInsensitive = true
     };
 
     public string Serialize(NodeGraph graph)
@@ -69,7 +82,7 @@ public class JsonGraphSerializer : IGraphSerializer
             foreach (var port in node.InputPorts)
             {
                 if (nodeDto.InputValues.TryGetValue(port.Name, out var savedValue))
-                    port.DefaultValue = CoerceValue(savedValue, port.DefaultValue);
+                    port.DefaultValue = CoerceValue(savedValue, port.DataType, port.DefaultValue);
             }
 
             graph.Nodes.Add(node);
@@ -102,27 +115,68 @@ public class JsonGraphSerializer : IGraphSerializer
         return graph;
     }
 
-    private static object? CoerceValue(object? savedValue, object? currentDefault)
+    private static object? CoerceValue(object? savedValue, string dataType, object? currentDefault)
     {
         if (savedValue is not JsonElement element)
             return savedValue;
 
-        try
+        switch (dataType.ToLowerInvariant())
         {
-            return currentDefault switch
-            {
-                int => element.GetInt32(),
-                double => element.GetDouble(),
-                float => (float)element.GetDouble(),
-                bool => element.GetBoolean(),
-                string => element.GetString(),
-                _ => JsonSerializer.Deserialize(element.GetRawText(), currentDefault?.GetType() ?? typeof(object), Options)
-            };
+            case "int":
+                return element.GetInt32();
+
+            case "float":
+                return element.GetDouble();
+
+            case "bool":
+                return element.GetBoolean();
+
+            case "string":
+            case "enum":
+                return element.GetString();
+
+            case "vec2":
+                return new Vec2(
+                    GetDouble(element, "X"),
+                    GetDouble(element, "Y"));
+
+            case "vec3":
+                return new Vec3(
+                    GetDouble(element, "X"),
+                    GetDouble(element, "Y"),
+                    GetDouble(element, "Z"));
+
+            case "color":
+                return Color.FromScRgb(
+                    (float)GetDouble(element, "ScA"),
+                    (float)GetDouble(element, "ScR"),
+                    (float)GetDouble(element, "ScG"),
+                    (float)GetDouble(element, "ScB"));
+
+            default:
+                if (currentDefault is null)
+                    return currentDefault;
+
+                try
+                {
+                    return JsonSerializer.Deserialize(element.GetRawText(), currentDefault.GetType(), Options);
+                }
+                catch
+                {
+                    return currentDefault;
+                }
         }
-        catch
+    }
+
+    private static double GetDouble(JsonElement element, string propertyName)
+    {
+        foreach (var prop in element.EnumerateObject())
         {
-            return currentDefault; // couldnt coerce so just keep whatver fresh node had
+            if (string.Equals(prop.Name, propertyName, StringComparison.OrdinalIgnoreCase))
+                return prop.Value.GetDouble();
         }
+
+        return 0.0;
     }
 }
 
