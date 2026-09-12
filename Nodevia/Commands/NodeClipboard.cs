@@ -7,6 +7,7 @@ internal sealed class NodeBlueprint
 {
     public required string Title { get; init; }
     public required Point Position { get; init; }
+    public string? DefinitionId { get; init; }
     public Execution.NodeBehavior? Behavior { get; init; }
     public string? BodyTemplateKey { get; init; }
     public required IReadOnlyList<Port> InputPorts { get; init; }
@@ -39,6 +40,7 @@ public sealed class NodeClipboard
         {
             Title = n.Title,
             Position = n.Position,
+            DefinitionId = n.DefinitionId,
             Behavior = n.Behavior,
             BodyTemplateKey = n.BodyTemplateKey,
             InputPorts = n.InputPorts.Select(p => p.Clone()).ToList(),
@@ -65,6 +67,7 @@ public sealed class NodeClipboard
             {
                 Title = bp.Title,
                 Position = new Point(bp.Position.X + offset.X, bp.Position.Y + offset.Y),
+                DefinitionId = bp.DefinitionId,
                 Behavior = bp.Behavior,
                 BodyTemplateKey = bp.BodyTemplateKey
             };

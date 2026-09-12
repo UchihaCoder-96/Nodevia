@@ -138,5 +138,6 @@ public class Node : INotifyPropertyChanged
             OnPropertyChanged();
         }
     }
+    public string? DefinitionId { get; internal set; }
 }
 

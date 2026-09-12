@@ -1,9 +1,11 @@
-﻿using Nodevia.Execution;
-using Nodevia.Commands;
+﻿using Nodevia.Commands;
 using Nodevia.Controls;
+using Nodevia.Execution;
 using Nodevia.Models;
 using Nodevia.Nodes;
+using Nodevia.Serialization;
 using Nodevia.UI;
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -368,17 +370,23 @@ namespace Nodevia.Demo
 
         private void Open_Click(object sender, RoutedEventArgs e)
         {
-            
+            var serializer = new JsonGraphSerializer();
+
+            string loaded = File.ReadAllText("graph.json");
+            NodeCanvas.Graph = serializer.Deserialize(loaded, _catalog, _factory);
         }
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            RefreshPrintNodes();
+            var serializer = new JsonGraphSerializer();
+
+            string json = serializer.Serialize(NodeCanvas.Graph);
+            File.WriteAllText("graph.json", json);
+
         }
 
         private void SaveAs_Click(object sender, RoutedEventArgs e)
         {
-
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)

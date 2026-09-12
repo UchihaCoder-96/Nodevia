@@ -13,6 +13,7 @@ public class NodeFactory
         {
             Title = definition.Title,
             Position = position,
+            DefinitionId = definition.Id,
             Behavior = definition.Behavior,
             BodyTemplateKey = definition.BodyTemplateKey,
             Outputs = definition.Outputs.ToDictionary(o => o.Name, o => (object?)null)

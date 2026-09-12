@@ -10,6 +10,8 @@ public class NodeDefinition
     public string Title { get; }
     public string Category { get; }
 
+    // public string? DefinitionId { get; internal set; }
+
     public IReadOnlyList<PortDefinition> Inputs { get; }
     public IReadOnlyList<PortDefinition> Outputs { get; }
 
