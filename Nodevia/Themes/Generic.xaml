@@ -28,18 +28,6 @@
                 IsChecked="{Binding DefaultValue, Mode=TwoWay}"/>
             </DataTemplate>
 
-            <DataTemplate x:Key="PortValueTemplate.Default">
-                <TextBox
-                Width="60"
-                Height="22"
-                Margin="5,0,0,0"
-                Padding="3,0"
-                VerticalContentAlignment="Center"
-                Text="{Binding DefaultValue,
-                    Mode=TwoWay,
-                    UpdateSourceTrigger=LostFocus}"/>
-            </DataTemplate>
-
             <DataTemplate x:Key="PortValueTemplate.string">
                 <TextBox
                 Width="60"
@@ -77,6 +65,10 @@
             </DataTemplate>
 
             <DataTemplate x:Key="PortValueTemplate.object">
+                <editors:NoneValueEditor Port="{Binding}"/>
+            </DataTemplate>
+
+            <DataTemplate x:Key="PortValueTemplate.Default">
                 <editors:NoneValueEditor Port="{Binding}"/>
             </DataTemplate>
 
@@ -589,7 +581,7 @@
                         x:Name="PART_Swatch"
                         Width="28"
                         Height="18"
-                        Background="{Binding Value, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ColorToBrushConverter}}"
+                        Background="{Binding DisplayValue, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ColorToBrushConverter}}"
                         IsChecked="{Binding IsPickerOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
                                     <ToggleButton.Template>
                                         <ControlTemplate TargetType="ToggleButton">
@@ -624,7 +616,7 @@
                                     Margin="0,0,0,6"
                                     RadiusX="3"
                                     RadiusY="3"
-                                    Fill="{Binding Value, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ColorToBrushConverter}}"/>
+                                    Fill="{Binding DisplayValue, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ColorToBrushConverter}}"/>
 
                                             <!-- R -->
                                             <Grid Height="24" Margin="0,1">

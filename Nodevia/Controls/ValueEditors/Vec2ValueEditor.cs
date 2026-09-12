@@ -35,11 +35,11 @@ public class Vec2ValueEditor : PortValueEditor
 
     private bool _isSyncingFromValue;
 
-    protected override void OnValueChanged()
+    protected override void OnDisplayValueChanged()
     {
-        base.OnValueChanged();
+        base.OnDisplayValueChanged();
 
-        if (Value is not Vec2 vec)
+        if (DisplayValue is not Vec2 vec)
             return;
 
         _isSyncingFromValue = true;

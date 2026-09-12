@@ -46,11 +46,11 @@ public class ColorValueEditor : PortValueEditor
 
     private bool _isSyncingFromValue;
 
-    protected override void OnValueChanged()
+    protected override void OnDisplayValueChanged()
     {
-        base.OnValueChanged();
+        base.OnDisplayValueChanged();
 
-        if (Value is not Color color)
+        if (DisplayValue is not Color color)
             return;
 
         _isSyncingFromValue = true;

@@ -58,6 +58,10 @@ namespace Nodevia.Models
             if (Connections.Any(c => c.Target == target))
                 throw new InvalidOperationException("Target port already has a connection.");
 
+            if (!AreDataTypesCompatible(source.DataType, target.DataType))
+                throw new InvalidOperationException(
+                    $"Cannot connect '{source.DataType}' output to '{target.DataType}' input - incompatible data types.");
+
             if (source.Owner is Node sourceNode && target.Owner is Node targetNode &&
                 WouldCreateCycle(sourceNode, targetNode))
             {
@@ -66,6 +70,18 @@ namespace Nodevia.Models
 
             return new Connection(source, target);
         }
+
+        private static bool AreDataTypesCompatible(string sourceType, string targetType)
+        {
+            if (IsUniversalType(sourceType) || IsUniversalType(targetType))
+                return true;
+
+            return string.Equals(sourceType, targetType, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsUniversalType(string dataType) =>
+            string.Equals(dataType, "object", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(dataType, "none", StringComparison.OrdinalIgnoreCase);
 
         private bool WouldCreateCycle(Node sourceNode, Node targetNode)
         {

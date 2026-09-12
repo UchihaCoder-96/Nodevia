@@ -29,11 +29,11 @@ public class Vec3ValueEditor : PortValueEditor
 
     private bool _isSyncingFromValue;
 
-    protected override void OnValueChanged()
+    protected override void OnDisplayValueChanged()
     {
-        base.OnValueChanged();
+        base.OnDisplayValueChanged();
 
-        if (Value is not Vec3 vec)
+        if (DisplayValue is not Vec3 vec)
             return;
 
         _isSyncingFromValue = true;
